@@ -1,0 +1,92 @@
+---
+# Bootstrap: администратор создаётся через localhost exception, креды — через env (не в argv).
+# Файл-маркер появляется только после успешного createUser и проверки входа.
+- name: Маркер bootstrap-а (создаётся после успешного createUser)
+  ansible.builtin.stat:
+    path: /var/lib/mongodb/.spa_admin_created
+  register: admin_marker
+
+- name: Bootstrap-создание администратора spaAdmin (localhost exception)
+  ansible.builtin.shell: |
+    mongosh --quiet --eval '
+      const c = JSON.parse(process.env.ADMIN_CREDS);
+      db.getSiblingDB("admin").createUser({
+        user: c.user,
+        pwd: c.password,
+        roles: [{ role: "root", db: "admin" }]
+      });
+      print("BOOTSTRAP-CREATED");'
+  environment:
+    ADMIN_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+  register: bootstrap
+  changed_when: "'BOOTSTRAP-CREATED' in bootstrap.stdout"
+  failed_when: bootstrap.rc != 0
+  when: not admin_marker.stat.exists
+  no_log: true
+
+- name: Маркер успешно выполненного bootstrap
+  ansible.builtin.file:
+    path: /var/lib/mongodb/.spa_admin_created
+    state: touch
+    mode: "0600"
+  when: not admin_marker.stat.exists and bootstrap.rc == 0
+
+- name: Вход spaAdmin работает (serverStatus)
+  ansible.builtin.command:
+    cmd: >-
+      mongosh --quiet --eval
+      'const c = JSON.parse(process.env.ADMIN_CREDS);
+       const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/?authSource=admin`);
+       print(conn.getDB("admin").runCommand({ serverStatus: 1 }).ok);'
+  environment:
+    ADMIN_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+  register: admin_login
+  changed_when: false
+  no_log: true
+
+- name: Bootstrap подтверждён входом администратора
+  ansible.builtin.assert:
+    that:
+      - (admin_login.stdout | trim) == '1'
+    success_msg: "spaAdmin создан и входит ✓"
+    fail_msg: "Вход spaAdmin не работает после bootstrap"
+
+- name: Анонимный доступ к данным закрыт (негативная проверка)
+  ansible.builtin.command:
+    cmd: mongosh --quiet --eval 'db.getSiblingDB("spa").clients.findOne()'
+  register: anon_probe
+  changed_when: false
+  failed_when: false
+
+- name: Сервер требует авторизацию
+  ansible.builtin.assert:
+    that:
+      - anon_probe.rc != 0
+      - >-
+        ('Unauthorized' in (anon_probe.stderr | default('')))
+        or ('requires authentication' in (anon_probe.stderr | default('')))
+    success_msg: "Анонимный доступ отклонён — авторизация включена"
+    fail_msg: "Анонимный запрос прошёл! rc={{ anon_probe.rc }} stderr={{ anon_probe.stderr | default('') }}"
+
+- name: Кастомные роли салона
+  community.mongodb.mongodb_role:
+    name: "{{ item.name }}"
+    db: "{{ item.db }}"
+    privileges: "{{ item.privileges }}"
+    state: present
+  loop: "{{ rbac_roles }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Пользователи и назначение ролей
+  community.mongodb.mongodb_user:
+    name: "{{ item.name }}"
+    password: "{{ lookup('vars', item.pwd_var) }}"
+    database: spa
+    update_password: on_create
+    roles: "{{ item.roles }}"
+    state: present
+  loop: "{{ rbac_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  no_log: true

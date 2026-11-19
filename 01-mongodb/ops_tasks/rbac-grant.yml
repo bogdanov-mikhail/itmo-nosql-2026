@@ -1,0 +1,33 @@
+---
+- block:
+    - name: Проба до выдачи (ожидается DENIED)
+      ansible.builtin.include_tasks: ops_tasks/rbac-probe.yml
+
+    - name: cards01 не видел расписание до выдачи роли
+      ansible.builtin.assert:
+        that:
+          - (cards01_probe.stdout | trim) == 'DENIED'
+        success_msg: "До выдачи: DENIED ✓"
+        fail_msg: "До выдачи ожидался DENIED, получено: {{ cards01_probe.stdout | trim }}"
+
+    - name: Выдача frontDeskOperator (итоговый список ролей cards01)
+      community.mongodb.mongodb_user:
+        name: cards01
+        password: "{{ pwd_cards01 }}"
+        database: spa
+        roles:
+          - { db: spa, role: clientCardsOnly }
+          - { db: spa, role: frontDeskOperator }
+        state: present
+      no_log: true
+
+    - name: Проба после выдачи (ожидается ALLOWED)
+      ansible.builtin.include_tasks: ops_tasks/rbac-probe.yml
+
+    - name: cards01 видит расписание после выдачи роли
+      ansible.builtin.assert:
+        that:
+          - (cards01_probe.stdout | trim) == 'ALLOWED'
+        success_msg: "После выдачи: ALLOWED ✓ — frontDeskOperator выдана cards01"
+        fail_msg: "После выдачи ожидался ALLOWED, получено: {{ cards01_probe.stdout | trim }}"
+  tags: [rbac-grant]

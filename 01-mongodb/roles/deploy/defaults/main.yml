@@ -1,0 +1,3 @@
+---
+mongo_packages:
+  - mongodb-org

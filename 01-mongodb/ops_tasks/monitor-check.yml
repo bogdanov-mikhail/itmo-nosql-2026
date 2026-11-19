@@ -1,0 +1,56 @@
+---
+# Верификация мониторинга: экспортер → Prometheus → Grafana (по цепочке)
+- block:
+    - name: Экспортер отдаёт метрики MongoDB (ждём конкретную метрику, не просто HTTP 200)
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ exporter_port }}/metrics"
+        return_content: true
+      register: exporter_metrics
+      until: "'mongodb_ss_connections' in exporter_metrics.content"
+      retries: 12
+      delay: 5
+
+    - name: Prometheus собирает spa-mongodb (up == 1)
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ prometheus_port }}/api/v1/query?query=up%7Bjob%3D%22spa-mongodb%22%7D"
+      register: prom_up
+      until:
+        - prom_up.json.data.result | default([]) | length > 0
+        - prom_up.json.data.result[0].value[1] == "1"
+      retries: 12
+      delay: 5
+
+    - name: Метрики MongoDB реально собираются (mongodb_up == 1)
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ prometheus_port }}/api/v1/query?query=mongodb_up"
+      register: mongo_up_query
+      until:
+        - mongo_up_query.json.data.result | default([]) | length > 0
+        - mongo_up_query.json.data.result[0].value[1] == "1"
+      retries: 12
+      delay: 5
+
+    - name: Grafana отвечает (database ok)
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ grafana_port }}/api/health"
+      register: grafana_health
+      until: grafana_health.json.database | default('') == "ok"
+      retries: 12
+      delay: 5
+
+    - name: Дашборд provisioned
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ grafana_port }}/api/search?query=SPA%20DB%20Ops"
+      register: dash_search
+      until: dash_search.json | length > 0
+      retries: 6
+      delay: 5
+
+    - name: Monitoring stack is green
+      ansible.builtin.debug:
+        msg: >-
+          мониторинг зелёный: exporter ({{ exporter_port }}) →
+          prometheus up={{ prom_up.json.data.result[0].value[1] }} →
+          grafana {{ grafana_health.json.version }},
+          дашборд «{{ dash_search.json[0].title }}» на месте
+  tags: [monitor-check]

@@ -1,0 +1,19 @@
+# mongod.conf — шаблон Ansible (лаб. 1, стенд spa-db)
+storage:
+  dbPath: /var/lib/mongodb
+
+systemLog:
+  destination: file
+  logAppend: true
+  path: /var/log/mongodb/mongod.log
+
+net:
+  bindIp: 127.0.0.1
+  port: {{ mongo_port }}
+
+processManagement:
+  timeZoneInfo: /usr/share/zoneinfo
+{% if auth_enabled %}
+security:
+  authorization: enabled
+{% endif %}

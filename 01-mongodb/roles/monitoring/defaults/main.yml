@@ -1,0 +1,3 @@
+---
+# Метрики по умолчанию для роли monitoring (порты — в group_vars/all/main.yml)
+exporter_version: "0.54.0"

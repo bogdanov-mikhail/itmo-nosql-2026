@@ -1,0 +1,244 @@
+---
+# Пользователь и конфиг инструментов — общая часть для всех операций копирования
+- name: Пользователь archiveOperator (встроенные backup + restore)
+  community.mongodb.mongodb_user:
+    name: archiveOperator
+    password: "{{ pwd_archive }}"
+    database: admin
+    update_password: on_create
+    roles:
+      - { db: admin, role: backup }
+      - { db: admin, role: restore }
+    state: present
+  no_log: true
+  tags: [backup-one, backup-all, backup-again, restore]
+
+- name: Каталоги для копий
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0700"
+    owner: root
+    group: root
+  loop:
+    - "{{ backup_root }}/one"
+    - "{{ backup_root }}/all"
+  tags: [backup-one, backup-all, backup-again, restore]
+
+- name: Конфиг инструментов с паролем (mongodump/mongorestore --config)
+  ansible.builtin.template:
+    src: mongo-tools-conf.j2
+    dest: /root/.mongo-tools.ini
+    mode: "0600"
+  no_log: true
+  tags: [backup-one, backup-all, backup-again, restore]
+
+- name: Листинг каталогов копий
+  ansible.builtin.command:
+    cmd: ls -lhR {{ backup_root }}
+  register: backup_listing
+  changed_when: false
+  tags: [backup-one, backup-all, backup-again, restore]
+
+- name: Содержимое каталогов
+  ansible.builtin.debug:
+    msg: "{{ backup_listing.stdout }}"
+
+# 3.1 Копия одной учебной базы (пункт 3.3 делает второй прогон той же операции).
+# Дамп пишется во временный файл и публикуется атомарным mv после проверки —
+# оборванный mongodump не оставит «похмельного» файла, который restore примет за свежий.
+- block:
+    - name: Штамп копии (UTC-секунды + случайный суффикс — исключает коллизию имён)
+      ansible.builtin.set_fact:
+        backup_stamp: "{{ lookup('pipe', 'date -u +%Y%m%dT%H%M%S') }}-{{ 999999 | random(start=100000) }}"
+
+    - name: Резервная копия базы spa (во временный файл)
+      ansible.builtin.command:
+        cmd: >-
+          mongodump
+          --config /root/.mongo-tools.ini
+          --username archiveOperator --authenticationDatabase admin
+          --gzip --archive={{ backup_root }}/one/.tmp-spa_{{ backup_stamp }}.archive.gz
+          --db spa
+      register: dump_one
+      changed_when: true
+
+    - name: Временный файл существует и не пуст
+      ansible.builtin.stat:
+        path: "{{ backup_root }}/one/.tmp-spa_{{ backup_stamp }}.archive.gz"
+      register: dump_one_stat
+
+    - name: Публикация копии (атомарный mv)
+      ansible.builtin.command:
+        cmd: >-
+          mv {{ backup_root }}/one/.tmp-spa_{{ backup_stamp }}.archive.gz
+          {{ backup_root }}/one/spa_{{ backup_stamp }}.archive.gz
+      when: dump_one_stat.stat.exists and dump_one_stat.stat.size > 0
+
+    - name: Опубликованная копия существует и не пуста
+      ansible.builtin.stat:
+        path: "{{ backup_root }}/one/spa_{{ backup_stamp }}.archive.gz"
+      register: dump_published
+
+    - name: Копия базы spa проверена
+      ansible.builtin.assert:
+        that:
+          - dump_published.stat.exists
+          - dump_published.stat.size > 0
+        success_msg: "Копия spa: {{ dump_published.stat.path }} ({{ dump_published.stat.size }} байт) ✓"
+        fail_msg: "Копия не создана: mongodump завершился, но валидного файла нет"
+  tags: [backup-one, backup-again]
+
+# 3.2 Копии всех учебных баз (mongodump берёт одну базу за прогон — архив на базу)
+- block:
+    - name: Резервные копии всех учебных баз
+      ansible.builtin.command:
+        cmd: >-
+          mongodump
+          --config /root/.mongo-tools.ini
+          --username archiveOperator --authenticationDatabase admin
+          --gzip --archive={{ backup_root }}/all/spa-full-{{ item }}_{{ lookup('pipe', 'date -u +%Y%m%dT%H%M%SZ') }}.archive.gz
+          --db {{ item }}
+      loop: "{{ spa_databases }}"
+      loop_control:
+        label: "{{ item }}"
+      register: dump_all
+      changed_when: true
+
+    - name: Все учебные базы скопированы
+      ansible.builtin.assert:
+        that:
+          - dump_all.results | length == spa_databases | length
+        success_msg: "Копии всех баз ({{ spa_databases | join(', ') }}) созданы ✓"
+        fail_msg: "Не все базы скопированы"
+  tags: [backup-all]
+
+# 3.4 Восстановление коллекции appointments из свежайшей копии
+- block:
+    - name: Свежайшая копия базы spa
+      ansible.builtin.shell:
+        cmd: ls -1 {{ backup_root }}/one/spa_*.archive.gz 2>/dev/null | sort | tail -1
+      register: restore_source
+      changed_when: false
+      failed_when: false
+
+    - name: Копия для восстановления найдена
+      ansible.builtin.assert:
+        that:
+          - restore_source.stdout | trim | length > 0
+        success_msg: "Источник восстановления: {{ restore_source.stdout | trim }}"
+        fail_msg: "В {{ backup_root }}/one нет ни одной копии — восстановление невозможно"
+
+    - name: Число записей в appointments до удаления
+      ansible.builtin.command:
+        cmd: >-
+          mongosh --quiet --eval
+          'const c = JSON.parse(process.env.ADMIN_CREDS);
+           const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/?authSource=admin`);
+           print(conn.getDB("spa").appointments.countDocuments());'
+      environment:
+        ADMIN_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+      register: count_before
+      changed_when: false
+
+    # Безопасность: архив разворачивается в изолированную коллекцию restore_check
+    # и сверяется с состоянием до потери — реальная коллекция не тронута до валидации
+    - name: Пробное восстановление в изолированную коллекцию restore_check
+      ansible.builtin.command:
+        cmd: >-
+          mongorestore
+          --config /root/.mongo-tools.ini
+          --username archiveOperator --authenticationDatabase admin
+          --gzip --archive={{ restore_source.stdout | trim }}
+          --nsInclude spa.appointments --nsFrom spa.appointments --nsTo spa.appointments.restore_check --drop
+      register: restore_probe
+      changed_when: true
+
+    - name: Проверка пробного восстановления
+      ansible.builtin.command:
+        cmd: >-
+          mongosh --quiet --eval
+          'const c = JSON.parse(process.env.ADMIN_CREDS);
+           const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/?authSource=admin`);
+           print(conn.getDB("spa").appointments.restore_check.countDocuments());'
+      environment:
+        ADMIN_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+      register: restore_probe_count
+      changed_when: false
+
+    - name: Архив валиден и полон — можно трогать реальную коллекцию
+      ansible.builtin.assert:
+        that:
+          - (restore_probe_count.stdout | trim) == (count_before.stdout | trim)
+        success_msg: "Пробное восстановление: {{ count_before.stdout | trim }} записей в restore_check ✓ архив валиден"
+        fail_msg: >-
+          Архив не содержит ожидаемых данных (restore_check={{ restore_probe_count.stdout | trim }},
+          ожидалось {{ count_before.stdout | trim }}) — реальная коллекция НЕ тронута
+
+    - name: Страховочная копия текущего состояния appointments перед удалением
+      ansible.builtin.command:
+        cmd: >-
+          mongodump
+          --config /root/.mongo-tools.ini
+          --username archiveOperator --authenticationDatabase admin
+          --gzip --archive={{ backup_root }}/pre-restore-safety.archive.gz
+          --db spa --collection appointments
+      register: safety_dump
+      changed_when: true
+
+    - name: Удаление коллекции appointments (имитация потери данных)
+      ansible.builtin.command:
+        cmd: >-
+          mongosh --quiet --eval
+          'const c = JSON.parse(process.env.ADMIN_CREDS);
+           const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/?authSource=admin`);
+           print(conn.getDB("spa").appointments.drop());'
+      environment:
+        ADMIN_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+      register: drop_result
+      changed_when: true
+
+    - name: Коллекция действительно удалена
+      ansible.builtin.assert:
+        that:
+          - (drop_result.stdout | trim) == 'true'
+        success_msg: "appointments удалена ✓"
+
+    - name: Восстановление коллекции из копии
+      ansible.builtin.command:
+        cmd: >-
+          mongorestore
+          --config /root/.mongo-tools.ini
+          --username archiveOperator --authenticationDatabase admin
+          --gzip --archive={{ restore_source.stdout | trim }}
+          --nsInclude spa.appointments --drop
+      register: restore_run
+      changed_when: true
+
+    - name: Число записей в appointments после восстановления
+      ansible.builtin.command:
+        cmd: >-
+          mongosh --quiet --eval
+          'const c = JSON.parse(process.env.ADMIN_CREDS);
+           const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/?authSource=admin`);
+           print(JSON.stringify({
+             before: Number("{{ count_before.stdout | trim }}"),
+             after: conn.getDB("spa").appointments.countDocuments(),
+             services: conn.getDB("spa").services.countDocuments()
+           }));'
+      environment:
+        ADMIN_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+      register: restore_check
+      changed_when: false
+
+    - name: Восстановление сверено
+      ansible.builtin.assert:
+        that:
+          - (restore_check.stdout | from_json).before == (restore_check.stdout | from_json).after
+          - (restore_check.stdout | from_json).services == 6
+        success_msg: >-
+          Восстановление подтверждено: appointments {{ (restore_check.stdout | from_json).before }} →
+          {{ (restore_check.stdout | from_json).after }}, services = 6 (не тронута) ✓
+          источник: {{ restore_source.stdout | trim }}
+        fail_msg: "Сверка не сошлась: {{ restore_check.stdout }}"
+  tags: [restore]

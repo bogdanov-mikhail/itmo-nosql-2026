@@ -1,0 +1,22 @@
+---
+# Общий пробник доступа cards01 к appointments: печатает ALLOWED / DENIED (код 13)
+- name: Проверка доступа cards01 к appointments
+  ansible.builtin.command:
+    cmd: >-
+      mongosh --quiet --eval
+      'const c = JSON.parse(process.env.PROBE);
+       try {
+         const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/spa?authSource=spa`);
+         conn.getDB("spa").appointments.findOne();
+         print("ALLOWED");
+       } catch (e) {
+         print(e.code === 13 ? "DENIED" : "ERR:" + e.code);
+       }'
+  environment:
+    PROBE: "{{ { 'user': 'cards01', 'password': pwd_cards01 } | to_json }}"
+  register: cards01_probe
+  changed_when: false
+
+- name: Результат пробы
+  ansible.builtin.debug:
+    msg: "cards01 → appointments: {{ cards01_probe.stdout | trim }}"

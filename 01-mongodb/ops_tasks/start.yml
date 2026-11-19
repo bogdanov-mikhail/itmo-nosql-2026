@@ -1,0 +1,28 @@
+---
+- block:
+    - name: Запуск mongod
+      ansible.builtin.systemd:
+        name: mongod
+        state: started
+        enabled: true
+
+    - name: Ожидание открытия порта
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: "{{ mongo_port }}"
+        state: started
+        timeout: 60
+
+    - name: Health-check ping
+      ansible.builtin.command:
+        cmd: "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok'"
+      register: mongo_ping
+      changed_when: false
+
+    - name: mongod запущен и отвечает
+      ansible.builtin.assert:
+        that:
+          - mongo_ping.stdout | trim == '1'
+        success_msg: "mongod запущен, ping ok=1"
+        fail_msg: "mongod не отвечает: {{ mongo_ping.stdout }}"
+  tags: [start]

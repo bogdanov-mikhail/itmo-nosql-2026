@@ -1,0 +1,15 @@
+[Unit]
+Description=Percona mongodb_exporter для стенда spa-db
+After=network-online.target mongod.service
+Wants=mongod.service
+
+[Service]
+User=mongodb-exporter
+Group=mongodb-exporter
+EnvironmentFile=/etc/default/mongodb-exporter
+ExecStart=/usr/local/bin/mongodb_exporter --collector.diagnosticdata --collector.dbstats --collector.collstats --mongodb.collstats-colls=spa.appointments,spa.services --compatible-mode --web.listen-address=127.0.0.1:{{ exporter_port }}
+Restart=on-failure
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

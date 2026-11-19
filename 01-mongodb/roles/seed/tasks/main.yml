@@ -1,0 +1,25 @@
+---
+- name: Копировать seed-скрипт на ВМ
+  ansible.builtin.copy:
+    src: seed.js
+    dest: /tmp/seed-spa.js
+    mode: "0644"
+
+- name: Наполнение учебных данных
+  ansible.builtin.command:
+    cmd: mongosh --quiet /tmp/seed-spa.js
+  environment:
+    SEED_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+  register: seed_run
+  changed_when: "'inserted=0 inserted_daily=0' not in seed_run.stdout"
+
+- name: Состав учебных данных соответствует плану (6/4/8/5/7)
+  ansible.builtin.assert:
+    that:
+      - "'services=6' in seed_run.stdout"
+      - "'masters=4' in seed_run.stdout"
+      - "'clients=8' in seed_run.stdout"
+      - "'appointments=5' in seed_run.stdout"
+      - "'daily_load=7' in seed_run.stdout"
+    success_msg: "Учебные данные на месте"
+    fail_msg: "Неверный состав данных: {{ seed_run.stdout }}"

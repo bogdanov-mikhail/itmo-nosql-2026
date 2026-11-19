@@ -1,0 +1,31 @@
+---
+# Создание нагрузки на учебную базу spa (под пользователем frontdesk01)
+- block:
+    - name: Копировать генератор нагрузки
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/load/load_gen.py"
+        dest: /tmp/load_gen.py
+        mode: "0644"
+
+    - name: Запуск нагрузки (ramp-up 30 c + устойчивая фаза 120 c, 4 потока)
+      ansible.builtin.command:
+        cmd: "{{ venv_dir }}/bin/python3 /tmp/load_gen.py"
+      environment:
+        SPA_LOAD_CREDS: "{{ { 'user': 'frontdesk01', 'password': pwd_frontdesk01 } | to_json }}"
+      async: 300
+      poll: 15
+      register: load_run
+
+    - name: Счётчики нагрузки
+      ansible.builtin.debug:
+        msg: "{{ load_run.stdout_lines[-1] }}"
+
+    - name: Все операции отработали
+      ansible.builtin.assert:
+        that:
+          - "load_run.stdout is search('\"inserted\": [1-9]')"
+          - "load_run.stdout is search('\"found\": [1-9]')"
+          - "load_run.stdout is search('\"updated\": [1-9]')"
+        success_msg: "Нагрузка выполнена: вставки/чтения/обновления > 0 ✓"
+        fail_msg: "Нагрузка не отработала: {{ load_run.stdout_lines[-1] }}"
+  tags: [load]

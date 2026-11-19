@@ -1,0 +1,64 @@
+---
+- block:
+    - name: Перезагрузка ВМ
+      ansible.builtin.reboot:
+        reboot_timeout: 300
+
+    - name: Ожидание порта mongod после загрузки
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: "{{ mongo_port }}"
+        delay: 5
+        timeout: 120
+
+    - name: Автозапуск юнита
+      ansible.builtin.command:
+        cmd: systemctl is-enabled mongod
+      register: unit_enabled
+      changed_when: false
+
+    - name: Активное состояние службы
+      ansible.builtin.command:
+        cmd: systemctl is-active mongod
+      register: unit_active
+      changed_when: false
+
+    - name: Health-check ping после ребута
+      ansible.builtin.command:
+        cmd: "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok'"
+      register: mongo_ping
+      changed_when: false
+
+    - name: Авторизация работает после ребута (serverStatus под spaAdmin)
+      ansible.builtin.command:
+        cmd: >-
+          mongosh --quiet --eval
+          'const c = JSON.parse(process.env.AUTH_CREDS);
+           const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/?authSource=admin`);
+           print(conn.getDB("admin").runCommand({ serverStatus: 1 }).ok)'
+      environment:
+        AUTH_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+      register: auth_probe
+      changed_when: false
+
+    - name: Момент загрузки ОС и старта mongod (доказательство автозапуска)
+      ansible.builtin.shell:
+        cmd: |
+          uptime -s
+          systemctl show mongod -p ActiveEnterTimestamp --value
+      register: boot_times
+      changed_when: false
+
+    - name: mongod поднялся сам и отвечает, авторизация пережила ребут
+      ansible.builtin.assert:
+        that:
+          - unit_enabled.stdout | trim == 'enabled'
+          - unit_active.stdout | trim == 'active'
+          - mongo_ping.stdout | trim == '1'
+          - (auth_probe.stdout | trim) == '1'
+        success_msg: >-
+          MongoDB is up and answering after reboot; авторизация работает
+          (загрузка ОС: {{ boot_times.stdout_lines[0] }},
+          mongod стартовал: {{ boot_times.stdout_lines[1] }})
+        fail_msg: "Автозапуск/авторизация не подтвердились: enabled={{ unit_enabled.stdout }}, active={{ unit_active.stdout }}, ping={{ mongo_ping.stdout }}, auth={{ auth_probe.stdout | trim }}"
+  tags: [reboot-check]
