@@ -1,0 +1,117 @@
+---
+# Демо 2.4: изменение набора разрешённых операций у роли spaMenuCurator.
+# Целевой состав роли берётся из group_vars (actions включают remove).
+# Демо перезапускаемо: перед изменением роль откатывается к исходному набору.
+- block:
+    - name: Подготовка демо — пробная услуга и откат remove к исходному набору
+      ansible.builtin.shell: |
+        mongosh --quiet --eval '
+          const c = JSON.parse(process.env.ADMIN_CREDS);
+          const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/?authSource=admin`);
+          const d = conn.getDB("spa");
+          const role = d.getRole("spaMenuCurator", { showPrivileges: true });
+          const svc = role.privileges.filter(p => p.resource.collection === "services")[0];
+          if (svc.actions.includes("remove")) {
+            d.revokePrivilegesFromRole("spaMenuCurator",
+              [{ resource: { db: "spa", collection: "services" }, actions: ["remove"] }]);
+            print("role-revoked");
+          } else { print("already-clean"); }
+          d.services.insertOne({ code: "matrix-probe-remove", title: "Пробная услуга", minutes: 30, price: 1000, active: true, _matrix_probe: true });
+          print("probe-inserted");'
+      environment:
+        ADMIN_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+      register: prep_revoke
+      changed_when: "'role-revoked' in prep_revoke.stdout"
+
+    - name: Привилегии spaMenuCurator на services ДО изменения
+      ansible.builtin.command:
+        cmd: >-
+          mongosh --quiet --eval
+          'const c = JSON.parse(process.env.ADMIN_CREDS);
+           const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/?authSource=admin`);
+           const role = conn.getDB("spa").getRole("spaMenuCurator", { showPrivileges: true });
+           const svc = role.privileges.filter(p => p.resource.collection === "services")[0];
+           print(svc.actions.sort().join(","));'
+      environment:
+        ADMIN_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+      register: actions_before
+      changed_when: false
+
+    - name: Состав операций до
+      ansible.builtin.debug:
+        msg: "spaMenuCurator@services до: [{{ actions_before.stdout | trim }}]"
+
+    - name: Приведение роли к целевому состоянию (добавлен remove)
+      community.mongodb.mongodb_role:
+        name: "{{ (rbac_roles | selectattr('name', 'equalto', 'spaMenuCurator') | first).name }}"
+        db: "{{ (rbac_roles | selectattr('name', 'equalto', 'spaMenuCurator') | first).db }}"
+        privileges: "{{ (rbac_roles | selectattr('name', 'equalto', 'spaMenuCurator') | first).privileges }}"
+        state: present
+
+    - name: Привилегии spaMenuCurator на services ПОСЛЕ изменения
+      ansible.builtin.command:
+        cmd: >-
+          mongosh --quiet --eval
+          'const c = JSON.parse(process.env.ADMIN_CREDS);
+           const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/?authSource=admin`);
+           const role = conn.getDB("spa").getRole("spaMenuCurator", { showPrivileges: true });
+           const svc = role.privileges.filter(p => p.resource.collection === "services")[0];
+           print(svc.actions.sort().join(","));'
+      environment:
+        ADMIN_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+      register: actions_after
+      changed_when: false
+
+    - name: Состав операций после
+      ansible.builtin.debug:
+        msg: "spaMenuCurator@services после: [{{ actions_after.stdout | trim }}]"
+
+    - name: remove появился в привилегиях роли
+      ansible.builtin.assert:
+        that:
+          - (actions_before.stdout | trim) is search('remove') == false
+          - (actions_after.stdout | trim) is search('remove')
+        success_msg: "Роль изменена: remove добавлен ✓"
+        fail_msg: "Ожидалось [find,insert,update] → [find,insert,remove,update], получено: {{ actions_before.stdout | trim }} → {{ actions_after.stdout | trim }}"
+
+    - name: Поведенческая проверка — curator01 удаляет пробную услугу (только что получила remove)
+      ansible.builtin.command:
+        cmd: >-
+          mongosh --quiet --eval
+          'const c = JSON.parse(process.env.PROBE);
+           try {
+             const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/spa?authSource=spa`);
+             const res = conn.getDB("spa").services.deleteOne({ code: "matrix-probe-remove" });
+             print(res.deletedCount === 1 ? "ALLOWED" : "no-effect");
+           } catch (e) {
+             print(e.code === 13 ? "DENIED" : "ERR:" + e.code);
+           }'
+      environment:
+        PROBE: "{{ { 'user': 'curator01', 'password': pwd_curator01 } | to_json }}"
+      register: curator_delete
+      changed_when: false
+
+    - name: curator01 смог удалить услугу
+      ansible.builtin.assert:
+        that:
+          - (curator_delete.stdout | trim) == 'ALLOWED'
+        success_msg: "delete services у curator01: ALLOWED ✓ (remove реально работает)"
+
+    - name: Пробная услуга действительно удалена
+      ansible.builtin.command:
+        cmd: >-
+          mongosh --quiet --eval
+          'const c = JSON.parse(process.env.ADMIN_CREDS);
+           const conn = new Mongo(`mongodb://${encodeURIComponent(c.user)}:${encodeURIComponent(c.password)}@127.0.0.1:27017/?authSource=admin`);
+           print(conn.getDB("spa").services.countDocuments({ code: "matrix-probe-remove" }));'
+      environment:
+        ADMIN_CREDS: "{{ { 'user': 'spaAdmin', 'password': mongo_admin_password } | to_json }}"
+      register: probe_gone
+      changed_when: false
+
+    - name: Пробная услуга удалена
+      ansible.builtin.assert:
+        that:
+          - (probe_gone.stdout | trim) == '0'
+        success_msg: "matrix-probe-remove: удалена curator01 ✓"
+  tags: [rbac-modify]

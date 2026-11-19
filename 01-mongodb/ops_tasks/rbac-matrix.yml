@@ -1,0 +1,33 @@
+---
+# Поведенческая матрица доступа: реальные операции под учебными пользователями.
+# Отдельный тег: матрица выполняет ЗАПИСИ (пробные документы), поэтому не входит
+# в обычный деплой и запускается после seed (использует его данные для deny-проб).
+- block:
+    - name: Копировать скрипт матрицы доступа
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/ops_tasks/access-matrix.js"
+        dest: /tmp/access-matrix.js
+        mode: "0644"
+
+    - name: Прогнать матрицу доступа
+      ansible.builtin.command:
+        cmd: mongosh --quiet /tmp/access-matrix.js
+      environment:
+        MATRIX_USERS: "{{ {
+          'frontdesk01': { 'user': 'frontdesk01', 'password': pwd_frontdesk01 },
+          'curator01': { 'user': 'curator01', 'password': pwd_curator01 },
+          'cards01': { 'user': 'cards01', 'password': pwd_cards01 },
+          'spaAdmin': { 'user': 'spaAdmin', 'password': mongo_admin_password } } | to_json }}"
+      register: matrix_run
+      changed_when: false
+
+    - name: Матрица доступа сходится с ожиданиями (7/7)
+      ansible.builtin.assert:
+        that:
+          - ok_count | int == 7
+          - "'MATRIX: OK' in matrix_run.stdout"
+        success_msg: "Матрица доступа 7/7 OK:\n{{ matrix_run.stdout }}"
+        fail_msg: "Матрица доступа не сошлась:\n{{ matrix_run.stdout }}"
+      vars:
+        ok_count: "{{ matrix_run.stdout_lines | select('search', ';OK$') | list | length }}"
+  tags: [rbac-matrix]

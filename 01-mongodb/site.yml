@@ -1,0 +1,21 @@
+---
+- name: Развёртывание и базовая настройка MongoDB на ВМ
+  hosts: spa-db
+  become: true
+  module_defaults:
+    community.mongodb.mongodb_role: &rbac_login
+      login_host: 127.0.0.1
+      login_port: "{{ mongo_port }}"
+      login_database: admin
+      login_user: spaAdmin
+      login_password: "{{ mongo_admin_password }}"
+    community.mongodb.mongodb_user: *rbac_login
+  roles:
+    - role: deploy
+    - role: rbac
+      vars:
+        ansible_python_interpreter: "{{ venv_dir }}/bin/python3"
+    - role: seed
+    - role: monitoring
+      vars:
+        ansible_python_interpreter: "{{ venv_dir }}/bin/python3"

@@ -1,0 +1,21 @@
+---
+- name: Состояние службы mongod
+  ansible.builtin.command:
+    cmd: systemctl show mongod -p ActiveState -p SubState -p UnitFileState -p MainPID
+  register: mongod_props
+  changed_when: false
+  tags: [status]
+
+- name: Отчёт
+  ansible.builtin.debug:
+    msg: "{{ mongod_props.stdout_lines | join(', ') }}"
+  tags: [status]
+
+- name: mongod запущен и в автозапуске
+  ansible.builtin.assert:
+    that:
+      - "'ActiveState=active' in mongod_props.stdout"
+      - "'UnitFileState=enabled' in mongod_props.stdout"
+    success_msg: "mongod: active, автозапуск enabled"
+    fail_msg: "Неожиданное состояние: {{ mongod_props.stdout }}"
+  tags: [status]

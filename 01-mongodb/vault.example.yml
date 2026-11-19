@@ -1,0 +1,11 @@
+---
+# Образец: скопировать в group_vars/all/vault.yml, заполнить реальными значениями
+# и зашифровать: ansible-vault encrypt group_vars/all/vault.yml
+# Пароль шифрования лежит в файле вне репо (см. ansible.cfg: vault_password_file).
+mongo_admin_password: "CHANGE_ME"
+pwd_frontdesk01: "CHANGE_ME"
+pwd_curator01: "CHANGE_ME"
+pwd_cards01: "CHANGE_ME"
+pwd_trial: "CHANGE_ME"
+pwd_archive: "CHANGE_ME"
+pwd_metrics: "CHANGE_ME"

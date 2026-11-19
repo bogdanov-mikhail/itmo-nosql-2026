@@ -1,0 +1,185 @@
+---
+- name: Системный пользователь mongodb-exporter
+  ansible.builtin.user:
+    name: mongodb-exporter
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Пользователь mongo metricsAgent (clusterMonitor + read local)
+  community.mongodb.mongodb_user:
+    name: metricsAgent
+    password: "{{ pwd_metrics }}"
+    database: admin
+    update_password: on_create
+    roles:
+      - { db: admin, role: clusterMonitor }
+      - { db: local, role: read }
+    state: present
+  no_log: true
+
+- name: Скачивание mongodb_exporter {{ exporter_version }} (linux arm64)
+  ansible.builtin.get_url:
+    url: "https://github.com/percona/mongodb_exporter/releases/download/v{{ exporter_version }}/mongodb_exporter-{{ exporter_version }}.linux-arm64.tar.gz"
+    dest: /tmp/mongodb_exporter.tar.gz
+    mode: "0644"
+    timeout: 120
+
+- name: Каталог изолированной распаковки экспортера
+  ansible.builtin.file:
+    path: /tmp/exporter-unpack
+    state: directory
+    mode: "0700"
+    owner: root
+    group: root
+
+- name: Распаковка в изолированный каталог
+  ansible.builtin.unarchive:
+    src: /tmp/mongodb_exporter.tar.gz
+    dest: /tmp/exporter-unpack
+    remote_src: true
+
+- name: Найти распакованный бинарник (только внутри каталога распаковки)
+  ansible.builtin.find:
+    paths: /tmp/exporter-unpack
+    patterns: "^mongodb_exporter$"
+    file_type: file
+    recurse: true
+    use_regex: true
+  register: exporter_bin
+
+- name: Ровно один кандидат найден
+  ansible.builtin.assert:
+    that:
+      - exporter_bin.files | length == 1
+    success_msg: "Бинарник: {{ exporter_bin.files[0].path }}"
+    fail_msg: "Ожидался один mongodb_exporter в архиве, найдено: {{ exporter_bin.files | length }}"
+
+- name: Бинарник в /usr/local/bin
+  ansible.builtin.copy:
+    src: "{{ exporter_bin.files[0].path }}"
+    dest: /usr/local/bin/mongodb_exporter
+    mode: "0755"
+    remote_src: true
+  notify: Перезапустить mongodb-exporter
+
+- name: Environment-файл экспортера (URI с паролем)
+  ansible.builtin.template:
+    src: mongodb-exporter.env.j2
+    dest: /etc/default/mongodb-exporter
+    mode: "0600"
+  no_log: true
+  notify: Перезапустить mongodb-exporter
+
+- name: Systemd-юнит экспортера
+  ansible.builtin.template:
+    src: mongodb-exporter.service.j2
+    dest: /etc/systemd/system/mongodb-exporter.service
+  notify: Перезапустить mongodb-exporter
+- name: Экспортер запущен и в автозапуске
+  ansible.builtin.systemd:
+    name: mongodb-exporter
+    state: started
+    enabled: true
+    daemon_reload: true
+
+# Prometheus
+- name: Репозиторий Grafana/Prometheus (apt.grafana.com) — Prometheus из него же
+  ansible.builtin.deb822_repository:
+    name: grafana
+    types: deb
+    uris: https://apt.grafana.com
+    suites: stable
+    components: main
+    signed_by: https://apt.grafana.com/gpg.key
+    enabled: true
+    state: present
+  register: grafana_repo
+
+- name: Установка Prometheus
+  ansible.builtin.apt:
+    name: prometheus
+    state: present
+    update_cache: "{{ grafana_repo is changed }}"
+
+- name: Конфиг Prometheus — свой job spa-mongodb (scrape 5s)
+  ansible.builtin.template:
+    src: prometheus-spa.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+  notify: Перезапустить prometheus
+
+- name: Каталог drop-in Prometheus
+  ansible.builtin.file:
+    path: /etc/systemd/system/prometheus.service.d
+    state: directory
+    mode: "0755"
+
+- name: Drop-in — Prometheus слушает только 127.0.0.1
+  ansible.builtin.copy:
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=/usr/bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.retention.time=2d --web.listen-address=127.0.0.1:{{ prometheus_port }}
+    dest: /etc/systemd/system/prometheus.service.d/listen.conf
+  notify: Перезапустить prometheus
+
+- name: Prometheus запущен и в автозапуске
+  ansible.builtin.systemd:
+    name: prometheus
+    state: started
+    enabled: true
+    daemon_reload: true
+
+# Grafana
+- name: Установка Grafana OSS
+  ansible.builtin.apt:
+    name: grafana
+    state: present
+
+- name: Grafana — анонимный viewer, слушает только 127.0.0.1
+  community.general.ini_file:
+    path: /etc/grafana/grafana.ini
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  loop:
+    - { section: server, option: http_addr, value: "127.0.0.1" }
+    - { section: auth.anonymous, option: enabled, value: "true" }
+    - { section: auth.anonymous, option: org_role, value: "Viewer" }
+  notify: Перезапустить grafana
+
+- name: Provisioning — datasource
+  ansible.builtin.template:
+    src: grafana-datasource.yml.j2
+    dest: /etc/grafana/provisioning/datasources/spa.yml
+  notify: Перезапустить grafana
+
+- name: Provisioning — провайдер дашбордов
+  ansible.builtin.template:
+    src: grafana-dashboards-provider.yml.j2
+    dest: /etc/grafana/provisioning/dashboards/spa.yml
+  notify: Перезапустить grafana
+
+- name: Каталог дашбордов Grafana
+  ansible.builtin.file:
+    path: /var/lib/grafana/dashboards
+    state: directory
+    owner: grafana
+    group: grafana
+    mode: "0755"
+
+- name: Дашборд «SPA DB Ops»
+  ansible.builtin.copy:
+    src: spa-db-ops.json
+    dest: /var/lib/grafana/dashboards/spa-db-ops.json
+    owner: grafana
+    group: grafana
+    mode: "0644"
+  notify: Перезапустить grafana
+
+- name: Grafana запущена и в автозапуске
+  ansible.builtin.systemd:
+    name: grafana-server
+    state: started
+    enabled: true
+    daemon_reload: true

@@ -1,0 +1,32 @@
+---
+- block:
+    - name: Проба до отзыва (ожидается ALLOWED — роль ещё выдана)
+      ansible.builtin.include_tasks: ops_tasks/rbac-probe.yml
+
+    - name: cards01 видит расписание до отзыва
+      ansible.builtin.assert:
+        that:
+          - (cards01_probe.stdout | trim) == 'ALLOWED'
+        success_msg: "До отзыва: ALLOWED ✓"
+        fail_msg: "До отзыва ожидался ALLOWED (сначала выполните make rbac-grant), получено: {{ cards01_probe.stdout | trim }}"
+
+    - name: Отзыв frontDeskOperator (итоговый список ролей cards01)
+      community.mongodb.mongodb_user:
+        name: cards01
+        password: "{{ pwd_cards01 }}"
+        database: spa
+        roles:
+          - { db: spa, role: clientCardsOnly }
+        state: present
+      no_log: true
+
+    - name: Проба после отзыва (ожидается DENIED)
+      ansible.builtin.include_tasks: ops_tasks/rbac-probe.yml
+
+    - name: cards01 снова не видит расписание
+      ansible.builtin.assert:
+        that:
+          - (cards01_probe.stdout | trim) == 'DENIED'
+        success_msg: "После отзыва: DENIED ✓ — frontDeskOperator отозвана у cards01"
+        fail_msg: "После отзыва ожидался DENIED, получено: {{ cards01_probe.stdout | trim }}"
+  tags: [rbac-revoke]

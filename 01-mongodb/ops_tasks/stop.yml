@@ -1,0 +1,28 @@
+---
+- block:
+    - name: Остановка mongod
+      ansible.builtin.systemd:
+        name: mongod
+        state: stopped
+
+    - name: Ожидание закрытия порта
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: "{{ mongo_port }}"
+        state: stopped
+        timeout: 30
+
+    - name: Состояние службы после остановки
+      ansible.builtin.command:
+        cmd: systemctl is-active mongod
+      register: svc_state
+      changed_when: false
+      failed_when: false
+
+    - name: mongod остановлен
+      ansible.builtin.assert:
+        that:
+          - svc_state.stdout | trim == 'inactive'
+        success_msg: "mongod остановлен, порт {{ mongo_port }} закрыт"
+        fail_msg: "Служба не остановлена: {{ svc_state.stdout }}"
+  tags: [stop]

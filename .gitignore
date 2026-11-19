@@ -5,3 +5,6 @@ __pycache__/
 venv/
 .env
 README.md
+vault.yml
+.idea/
+!01-mongodb/README.md

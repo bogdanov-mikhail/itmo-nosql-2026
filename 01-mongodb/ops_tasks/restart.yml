@@ -1,0 +1,34 @@
+---
+- block:
+    - name: PID до перезапуска
+      ansible.builtin.command:
+        cmd: systemctl show mongod -p MainPID --value
+      register: pid_before
+      changed_when: false
+
+    - name: Перезапуск mongod
+      ansible.builtin.systemd:
+        name: mongod
+        state: restarted
+
+    - name: Ожидание открытия порта
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: "{{ mongo_port }}"
+        state: started
+        timeout: 60
+
+    - name: PID после перезапуска
+      ansible.builtin.command:
+        cmd: systemctl show mongod -p MainPID --value
+      register: pid_after
+      changed_when: false
+
+    - name: Процесс действительно заменён
+      ansible.builtin.assert:
+        that:
+          - pid_before.stdout | trim != pid_after.stdout | trim
+          - pid_after.stdout | trim != '0'
+        success_msg: "mongod перезапущен: PID {{ pid_before.stdout | trim }} → {{ pid_after.stdout | trim }}"
+        fail_msg: "PID не изменился: {{ pid_before.stdout | trim }} → {{ pid_after.stdout | trim }}"
+  tags: [restart]

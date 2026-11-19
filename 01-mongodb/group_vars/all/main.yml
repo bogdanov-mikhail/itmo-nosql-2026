@@ -1,0 +1,46 @@
+---
+mongo_version: "8.0"
+mongo_port: 27017
+spa_databases:
+  - spa
+  - spa_analytics
+backup_root: /var/backups/mongodb
+venv_dir: /opt/spa-db/venv
+auth_enabled: true
+# Порты стека мониторинга (общие для роли monitoring и ops-проверок)
+exporter_port: "9216"
+prometheus_port: "9090"
+grafana_port: "3000"
+rbac_roles:
+  - name: frontDeskOperator
+    db: spa
+    privileges:
+      - resource: { db: spa, collection: appointments }
+        actions: [find, insert, update, remove]
+      - resource: { db: spa, collection: services }
+        actions: [find]
+      - resource: { db: spa, collection: masters }
+        actions: [find]
+  - name: spaMenuCurator
+    db: spa
+    privileges:
+      - resource: { db: spa, collection: services }
+        actions: [find, insert, update, remove]
+  - name: clientCardsOnly
+    db: spa
+    privileges:
+      - resource: { db: spa, collection: clients }
+        actions: [find]
+rbac_users:
+  - name: frontdesk01
+    pwd_var: pwd_frontdesk01
+    roles:
+      - { db: spa, role: frontDeskOperator }
+  - name: curator01
+    pwd_var: pwd_curator01
+    roles:
+      - { db: spa, role: spaMenuCurator }
+  - name: cards01
+    pwd_var: pwd_cards01
+    roles:
+      - { db: spa, role: clientCardsOnly }

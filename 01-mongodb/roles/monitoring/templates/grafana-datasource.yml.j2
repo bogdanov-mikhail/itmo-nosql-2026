@@ -1,0 +1,10 @@
+apiVersion: 1
+
+datasources:
+  - name: prometheus-spa
+    uid: prometheus-spa
+    type: prometheus
+    access: proxy
+    url: http://127.0.0.1:{{ prometheus_port }}
+    isDefault: true
+    editable: false

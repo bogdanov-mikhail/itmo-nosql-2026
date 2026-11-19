@@ -1,0 +1,73 @@
+---
+- name: Разовые операции со службой mongod
+  hosts: spa-db
+  become: true
+  vars:
+    ansible_python_interpreter: "{{ venv_dir }}/bin/python3"
+  module_defaults:
+    community.mongodb.mongodb_role: &ops_rbac_login
+      login_host: 127.0.0.1
+      login_port: "{{ mongo_port }}"
+      login_database: admin
+      login_user: spaAdmin
+      login_password: "{{ mongo_admin_password }}"
+    community.mongodb.mongodb_user: *ops_rbac_login
+  tasks:
+    - name: Отчёт о состоянии службы
+      ansible.builtin.include_tasks: ops_tasks/status.yml
+      tags: [never, status]
+
+    - name: Остановка mongod
+      ansible.builtin.include_tasks: ops_tasks/stop.yml
+      tags: [never, stop]
+
+    - name: Запуск mongod
+      ansible.builtin.include_tasks: ops_tasks/start.yml
+      tags: [never, start]
+
+    - name: Перезапуск mongod
+      ansible.builtin.include_tasks: ops_tasks/restart.yml
+      tags: [never, restart]
+
+    - name: Проверка автозапуска перезагрузкой ВМ
+      ansible.builtin.include_tasks: ops_tasks/reboot-check.yml
+      tags: [never, reboot-check]
+
+    - name: Настройка RBAC (идемпотентно, вне полного деплоя)
+      ansible.builtin.include_role:
+        name: rbac
+        apply:
+          tags: [rbac-setup]
+      tags: [never, rbac-setup]
+
+    - name: Демо RBAC — выдача роли frontDeskOperator пользователю cards01
+      ansible.builtin.include_tasks: ops_tasks/rbac-grant.yml
+      tags: [never, rbac-grant]
+
+    - name: Демо RBAC — отзыв роли у cards01
+      ansible.builtin.include_tasks: ops_tasks/rbac-revoke.yml
+      tags: [never, rbac-revoke]
+
+    - name: Демо RBAC — изменение набора операций у spaMenuCurator
+      ansible.builtin.include_tasks: ops_tasks/rbac-modify.yml
+      tags: [never, rbac-modify]
+
+    - name: Демо RBAC — жизненный цикл временных роли и пользователя
+      ansible.builtin.include_tasks: ops_tasks/rbac-trial.yml
+      tags: [never, rbac-trial]
+
+    - name: Поведенческая матрица доступа (после seed)
+      ansible.builtin.include_tasks: ops_tasks/rbac-matrix.yml
+      tags: [never, rbac-matrix]
+
+    - name: Резервное копирование и восстановление
+      ansible.builtin.include_tasks: ops_tasks/backup.yml
+      tags: [never, backup-one, backup-all, backup-again, restore]
+
+    - name: Проверка мониторинга по цепочке
+      ansible.builtin.include_tasks: ops_tasks/monitor-check.yml
+      tags: [never, monitor-check]
+
+    - name: Нагрузка на учебную базу
+      ansible.builtin.include_tasks: ops_tasks/load.yml
+      tags: [never, load]
