@@ -1,0 +1,25 @@
+{
+  "index_patterns": ["logs"],
+  "priority": 200,
+  "data_stream": {},
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "index.routing.allocation.require.temp": "hot"
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": {"type": "date"},
+        "client": {"type": "ip"},
+        "method": {"type": "keyword"},
+        "path": {"type": "keyword"},
+        "args": {"type": "keyword"},
+        "status": {"type": "short"},
+        "bytes": {"type": "long"},
+        "request_time": {"type": "float"},
+        "ua": {"type": "text", "fields": {"raw": {"type": "keyword"}}}
+      }
+    }
+  }
+}

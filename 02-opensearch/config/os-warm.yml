@@ -1,0 +1,36 @@
+# Узел os-warm: только тёплые данные. Manager-роли нет — падение warm-узла
+# кластер переживает (кворум 1 на os-hot).
+network.host: 0.0.0.0
+cluster.name: coffee-lab
+node.name: os-warm
+node.roles: [data]
+node.attr.temp: warm
+
+discovery.seed_hosts: [os-hot, os-warm]
+
+# Пиры соединяются по DNS-имени (оно в SAN серта), а не по IP контейнера
+transport.publish_host: os-warm
+
+# TLS на транспортном уровне (9300)
+plugins.security.ssl.transport.pemcert_filepath: pki/os-warm.crt
+plugins.security.ssl.transport.pemkey_filepath: pki/os-warm.key
+plugins.security.ssl.transport.pemtrustedcas_filepath: pki/root-ca.crt
+plugins.security.ssl.transport.enforce_hostname_verification: true
+
+# TLS на REST-уровне (9200)
+plugins.security.ssl.http.enabled: true
+plugins.security.ssl.http.pemcert_filepath: pki/os-warm.crt
+plugins.security.ssl.http.pemkey_filepath: pki/os-warm.key
+plugins.security.ssl.http.pemtrustedcas_filepath: pki/root-ca.crt
+
+# DN в RFC2253-порядке (RFC2253 разворачивает компоненты subject)
+plugins.security.authcz.admin_dn:
+  - "CN=admin,O=Coffee Lab"
+plugins.security.nodes_dn:
+  - "CN=os-hot,O=Coffee Lab"
+  - "CN=os-warm,O=Coffee Lab"
+
+# Security index инициализирует os-hot (флаг allow_default_init_securityindex
+# только там): два узла с флагом соревновались бы за инициализацию.
+
+# Метрики узлов (JVM/CPU/thread pools) экспортёр отдаёт по умолчанию

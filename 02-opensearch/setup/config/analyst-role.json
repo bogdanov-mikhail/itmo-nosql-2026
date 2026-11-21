@@ -1,0 +1,5 @@
+{
+  "index_permissions": [
+    {"index_patterns": ["logs*"], "allowed_actions": ["read"]}
+  ]
+}

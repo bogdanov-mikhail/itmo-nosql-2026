@@ -1,0 +1,8 @@
+{
+  "allowed_actions": [
+    "indices:data/write/bulk*",
+    "indices:data/write/create",
+    "indices:data/write/index",
+    "indices:admin/mapping/put"
+  ]
+}

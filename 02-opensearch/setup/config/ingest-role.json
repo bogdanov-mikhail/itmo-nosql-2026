@@ -1,0 +1,6 @@
+{
+  "cluster_permissions": ["indices:data/write/bulk"],
+  "index_permissions": [
+    {"index_patterns": ["logs", ".ds-logs-*"], "allowed_actions": ["logsWrite"]}
+  ]
+}
