@@ -1,0 +1,119 @@
+{
+  "title": "Coffee Lab — OpenSearch",
+  "uid": "coffee-os",
+  "tags": ["opensearch", "coffee-lab"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "time": { "from": "now-30m", "to": "now" },
+  "refresh": "10s",
+  "panels": [
+    { "type": "row", "title": "Жив ли кластер", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 } },
+    {
+      "type": "stat", "title": "Статус кластера (0 green / 1 yellow / 2 red)",
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "max by (cluster) (opensearch_cluster_status)", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 1 },
+            { "color": "red", "value": 2 }
+          ]},
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "GREEN", "color": "green" }, "1": { "text": "YELLOW", "color": "yellow" }, "2": { "text": "RED", "color": "red" } } }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat", "title": "Узлы (всего / с данными)",
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "max by (cluster) (opensearch_cluster_nodes_number)", "legendFormat": "Всего узлов", "refId": "A" },
+        { "expr": "max by (cluster) (opensearch_cluster_datanodes_number)", "legendFormat": "С данными", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] }
+    },
+    {
+      "type": "timeseries", "title": "Шарды unassigned (должно быть 0)",
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "opensearch_cluster_shards_number{type=\"unassigned\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] }
+    },
+
+    { "type": "row", "title": "Чем заняты узлы", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 8 } },
+    {
+      "type": "timeseries", "title": "JVM heap, % занятого",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "opensearch_jvm_mem_heap_used_percent", "legendFormat": "{{node}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 85 } ] } }, "overrides": [] }
+    },
+    {
+      "type": "timeseries", "title": "CPU узлов, %",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "opensearch_os_cpu_percent", "legendFormat": "{{node}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100 }, "overrides": [] }
+    },
+    {
+      "type": "timeseries", "title": "GC: время сборок, с/мин",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "60 * sum by (node, gc) (rate(opensearch_jvm_gc_collection_time_seconds[1m]))", "legendFormat": "{{node}} {{gc}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+    {
+      "type": "timeseries", "title": "Диск данных, % занято",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "100 - 100 * opensearch_fs_total_free_bytes / opensearch_fs_total_total_bytes", "legendFormat": "{{node}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 85 } ] } }, "overrides": [] }
+    },
+
+    { "type": "row", "title": "Как идёт приём логов", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 } },
+    {
+      "type": "timeseries", "title": "Rate индексации (приём логов), ops/с",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 26 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (node) (rate(opensearch_indices_indexing_index_count[1m]))", "legendFormat": "{{node}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] }
+    },
+    {
+      "type": "timeseries", "title": "Поиск, запросов/с",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 26 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (node) (rate(opensearch_indices_search_query_count[1m]))", "legendFormat": "{{node}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] }
+    },
+    {
+      "type": "timeseries", "title": "Документы логов по поколениям (.ds-logs-*)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 34 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (\"index\") (opensearch_index_doc_number{index=~\".ds-logs.*\", context=\"primaries\"})", "legendFormat": "{{index}}", "refId": "A" }],
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+
+    { "type": "row", "title": "Что делает ISM и насколько узлам тесно", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 42 } },
+    {
+      "type": "timeseries", "title": "Размер поколений логов, байт",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 43 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum by (\"index\") (opensearch_index_store_size_bytes{index=~\".ds-logs.*\"})", "legendFormat": "{{index}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
+    },
+    {
+      "type": "timeseries", "title": "Circuit breakers: оценка/лимит",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 43 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "max(opensearch_circuitbreaker_overhead_ratio)", "legendFormat": "overhead ratio", "refId": "A" }],
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] }
+    }
+  ]
+}

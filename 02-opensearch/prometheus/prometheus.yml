@@ -1,0 +1,31 @@
+# Prometheus: скрейп метрик OpenSearch с ОБЕИХ узлов.
+# Каждый узел экспортёром отдаёт метрики только по себе (nodes.filter=_local
+# по умолчанию) — поэтому два job'а с точным server_name под TLS.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: opensearch-hot
+    scheme: https
+    metrics_path: /_prometheus/metrics
+    basic_auth:
+      username: metricsAgent
+      password_file: /run/prom/metricsagent.password
+    tls_config:
+      ca_file: /etc/prometheus/secrets/root-ca.crt
+      server_name: os-hot
+    static_configs:
+      - targets: ["os-hot:9200"]
+
+  - job_name: opensearch-warm
+    scheme: https
+    metrics_path: /_prometheus/metrics
+    basic_auth:
+      username: metricsAgent
+      password_file: /run/prom/metricsagent.password
+    tls_config:
+      ca_file: /etc/prometheus/secrets/root-ca.crt
+      server_name: os-warm
+    static_configs:
+      - targets: ["os-warm:9200"]

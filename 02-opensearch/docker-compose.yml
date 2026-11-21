@@ -1,0 +1,331 @@
+# Стенд ЛР-2: Hot-Warm кластер OpenSearch 3.8 с TLS, Dashboards, пайплайн
+# nginx -> Fluent Bit -> data stream, мониторинг Prometheus/Grafana.
+# Секреты — только через .env рядом с этим файлом (см. .env.example).
+# Порты публикуются только на 127.0.0.1.
+name: lab2
+
+x-os-build: &os-build
+  context: .
+  dockerfile: Dockerfile.os
+  args:
+    PLUGIN_VERSION: "3.8.0.0"
+
+x-os-common: &os-common
+  build: *os-build
+  image: lab2/opensearch:3.8.0
+  restart: unless-stopped
+  ulimits:
+    memlock:
+      soft: -1
+      hard: -1
+    nofile:
+      soft: 65536
+      hard: 65536
+  environment:
+    OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g"
+    OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    DISABLE_INSTALL_DEMO_CONFIG: "true"
+  # Кластер зелёный (2 узла) — иначе узел считается неготовым
+  healthcheck:
+    test: ["CMD-SHELL", "curl -sf --cacert /usr/share/opensearch/config/pki/root-ca.crt -u admin:$${OPENSEARCH_INITIAL_ADMIN_PASSWORD} 'https://127.0.0.1:9200/_cluster/health?wait_for_status=green&timeout=2s' | grep -q '\"status\":\"green\"'"]
+    interval: 15s
+    timeout: 5s
+    retries: 30
+    start_period: 60s
+
+services:
+  # Альтернативный генератор, не подключён к секретам и томам стенда.
+  k6:
+    image: grafana/k6:1.4.2
+    profiles: ["load"]
+    volumes:
+      - ./load/load.js:/scripts/load.js:ro
+    command: ["run", "/scripts/load.js"]
+
+  # One-shot: только PKI; неполные существующие данные не перезаписываются.
+  certs:
+    image: python:3.12-alpine
+    restart: "no"
+    entrypoint: ["/bin/sh", "/make-certs.sh"]
+    volumes:
+      - ./certs/make-certs.sh:/make-certs.sh:ro
+      - ./certs/pki-state.sh:/pki-state.sh:ro
+      - os-pki:/certs/pki
+      - os-security:/certs/security
+      - os-hot-data:/data/hot:ro
+      - os-warm-data:/data/warm:ro
+
+  # One-shot: bcrypt и initial users только после создания PKI.
+  users-seed:
+    image: python:3.12-alpine
+    restart: "no"
+    entrypoint: ["/bin/sh", "/make-users.sh"]
+    environment:
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      KIBANASERVER_PASSWORD: ${KIBANASERVER_PASSWORD}
+      LOGSHIPPER_PASSWORD: ${LOGSHIPPER_PASSWORD}
+      ANALYST_PASSWORD: ${ANALYST_PASSWORD}
+      METRICSAGENT_PASSWORD: ${METRICSAGENT_PASSWORD}
+    volumes:
+      - ./setup/make-users.sh:/make-users.sh:ro
+      - ./certs/pki-state.sh:/pki-state.sh:ro
+      - os-pki:/certs/pki
+      - os-security:/certs/security
+      - os-hot-data:/data/hot:ro
+      - os-warm-data:/data/warm:ro
+    depends_on:
+      certs:
+        condition: service_completed_successfully
+
+  security-seed:
+    image: lab2/opensearch:3.8.0
+    build: *os-build
+    restart: "no"
+    entrypoint: ["/bin/sh", "/security-seed.sh"]
+    volumes:
+      - ./setup/security-seed.sh:/security-seed.sh:ro
+      - os-security:/seed
+    depends_on:
+      users-seed:
+        condition: service_completed_successfully
+
+  # Настройка ролей и жизненного цикла после запуска узлов.
+  setup:
+    image: lab2/opensearch:3.8.0
+    restart: "no"
+    entrypoint: ["/bin/sh", "/setup.sh"]
+    environment:
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      METRICSAGENT_PASSWORD: ${METRICSAGENT_PASSWORD}
+    volumes:
+      - ./setup/setup.sh:/setup.sh:ro
+      - ./setup/ism-policy.sh:/ism-policy.sh:ro
+      - ./setup/config:/lab-config:ro
+      - os-security:/seed
+    depends_on:
+      security-seed:
+        condition: service_completed_successfully
+
+  # Проверки на Python; подготовка сертификатов остаётся отдельным сервисом.
+  checks:
+    image: python:3.12-alpine
+    working_dir: /app
+    entrypoint: ["python3", "-m"]
+    environment:
+      ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      LOGSHIPPER_PASSWORD: ${LOGSHIPPER_PASSWORD}
+      ANALYST_PASSWORD: ${ANALYST_PASSWORD}
+      METRICSAGENT_PASSWORD: ${METRICSAGENT_PASSWORD}
+      GRAFANA_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - ./checks:/app/checks:ro
+      - type: volume
+        source: os-security
+        target: /etc/checks/root-ca.crt
+        read_only: true
+        volume: {subpath: root-ca.crt}
+    profiles: ["tools"]
+    depends_on:
+      os-hot:
+        condition: service_healthy
+
+  # Hot-узел: cluster manager + горячие данные + ingest. Публикуется на 127.0.0.1:9200.
+  # Зависимость только от certs: setup ждёт зелёный кластер и применяет роли,
+  # поэтому не может быть условием старта узлов (цикл «узлы -> setup -> узлы»).
+  os-hot:
+    <<: *os-common
+    depends_on:
+      security-seed:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - ./config/os-hot.yml:/usr/share/opensearch/config/opensearch.yml:ro
+      - type: volume
+        source: os-pki
+        target: /usr/share/opensearch/config/pki/root-ca.crt
+        read_only: true
+        volume: {subpath: root-ca.crt}
+      - type: volume
+        source: os-pki
+        target: /usr/share/opensearch/config/pki/os-hot.crt
+        read_only: true
+        volume: {subpath: os-hot.crt}
+      - type: volume
+        source: os-pki
+        target: /usr/share/opensearch/config/pki/os-hot.key
+        read_only: true
+        volume: {subpath: os-hot.key}
+      - type: volume
+        source: os-security
+        target: /usr/share/opensearch/config/opensearch-security
+        read_only: true
+        volume: {nocopy: true}
+      - os-hot-data:/usr/share/opensearch/data
+
+  # Warm-узел: тёплые данные. REST наружу не публикуется — только внутри сети.
+  os-warm:
+    <<: *os-common
+    depends_on:
+      security-seed:
+        condition: service_completed_successfully
+    volumes:
+      - ./config/os-warm.yml:/usr/share/opensearch/config/opensearch.yml:ro
+      - type: volume
+        source: os-pki
+        target: /usr/share/opensearch/config/pki/root-ca.crt
+        read_only: true
+        volume: {subpath: root-ca.crt}
+      - type: volume
+        source: os-pki
+        target: /usr/share/opensearch/config/pki/os-warm.crt
+        read_only: true
+        volume: {subpath: os-warm.crt}
+      - type: volume
+        source: os-pki
+        target: /usr/share/opensearch/config/pki/os-warm.key
+        read_only: true
+        volume: {subpath: os-warm.key}
+      - type: volume
+        source: os-security
+        target: /usr/share/opensearch/config/opensearch-security
+        read_only: true
+        volume: {nocopy: true}
+      - os-warm-data:/usr/share/opensearch/data
+
+  # Веб-интерфейс. Ходит в кластер под служебным kibanaserver по TLS с проверкой CA.
+  dashboards:
+    image: opensearchproject/opensearch-dashboards:3.8.0
+    restart: unless-stopped
+    environment:
+      KIBANASERVER_PASSWORD: ${KIBANASERVER_PASSWORD}
+    volumes:
+      - ./dashboards/opensearch_dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml:ro
+      - type: volume
+        source: os-security
+        target: /usr/share/opensearch-dashboards/config/pki/root-ca.crt
+        read_only: true
+        volume:
+          subpath: root-ca.crt
+    ports:
+      - "127.0.0.1:5601:5601"
+    depends_on:
+      os-hot:
+        condition: service_healthy
+    healthcheck:
+      # 401 на /api/status — сервис жив и требует авторизацию; 503 — ещё стартует
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost:5601/api/status | grep -qE '200|401'"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  # Учебная страница кофейни: источник JSON access-логов для пайплайна.
+  # Симлинки access.log/error.log -> stdout из образа убираем: шиппер читает
+  # файлы из тома, а не контейнерные консоли.
+  nginx:
+    image: nginx:1.29-alpine
+    restart: unless-stopped
+    command: ["sh", "-c", "for f in /var/log/nginx/access.log /var/log/nginx/error.log; do if [ -L \"$$f\" ]; then rm -f \"$$f\"; fi; done; exec nginx -g 'daemon off;'"]
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/site:/usr/share/nginx/html:ro
+      - nginx-logs:/var/log/nginx
+    ports:
+      - "127.0.0.1:8080:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ | grep -q Тёплый"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  # Перекладчик логов: tail JSON access.log -> data stream logs.
+  # Позиция чтения (DB) — в томе логов, переживает пересоздание контейнера.
+  logshipper:
+    image: fluent/fluent-bit:3.2
+    restart: unless-stopped
+    command: ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf"]
+    environment:
+      LOGSHIPPER_PASSWORD: ${LOGSHIPPER_PASSWORD}
+    volumes:
+      - ./fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./fluentbit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
+      - type: volume
+        source: os-security
+        target: /fluent-bit/etc/pki/root-ca.crt
+        read_only: true
+        volume:
+          subpath: root-ca.crt
+      - nginx-logs:/var/log/nginx
+      - fluentbit-db:/var/lib/fluent-bit
+    depends_on:
+      os-hot:
+        condition: service_healthy
+      setup:
+        condition: service_completed_successfully
+      nginx:
+        condition: service_healthy
+
+  # Сбор метрик с обоих узлов (HTTPS + basic auth metricsAgent).
+  # Пароль передаётся env и рендерится в файл на старте (password_file в
+  # конфиге); порт наружу — только 127.0.0.1:9090.
+  prometheus:
+    image: prom/prometheus:v3.4.1
+    user: "0"
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - "mkdir -p /run/prom && printf '%s' \"$$METRICSAGENT_PASSWORD\" > /run/prom/metricsagent.password && exec /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.retention.time=2h"
+    environment:
+      METRICSAGENT_PASSWORD: ${METRICSAGENT_PASSWORD}
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - type: volume
+        source: os-security
+        target: /etc/prometheus/secrets/root-ca.crt
+        read_only: true
+        volume:
+          subpath: root-ca.crt
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      os-hot:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9090/-/ready | grep -q Ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  # Дашборд из provisioning (datasource + JSON), без ручных действий в UI.
+  grafana:
+    image: grafana/grafana:12.1.1
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:3000/api/health | grep -q ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  os-pki:
+  os-security:
+  os-hot-data:
+  os-warm-data:
+  nginx-logs:
+  fluentbit-db:
+  prometheus-data:
+  grafana-data:

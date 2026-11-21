@@ -1,0 +1,14 @@
+# Конфигурация OpenSearch Dashboards стенда ЛР-2.
+server.host: "0.0.0.0"
+server.name: dashboards
+opensearch.hosts: ["https://os-hot:9200"]
+
+# Служебный пользователь Dashboards (пароль — из .env)
+opensearch.username: kibanaserver
+opensearch.password: "${KIBANASERVER_PASSWORD}"
+
+# TLS до кластера: полная проверка цепочки по корневому CA
+opensearch.ssl.verificationMode: full
+opensearch.ssl.certificateAuthorities: ["/usr/share/opensearch-dashboards/config/pki/root-ca.crt"]
+
+opensearch.requestHeadersAllowlist: [Authorization, securitytenant]

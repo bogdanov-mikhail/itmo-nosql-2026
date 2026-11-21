@@ -1,0 +1,49 @@
+# Узел os-hot: cluster manager + контент и горячие данные + ingest
+# (data_content нужен системным индексам — без него кластер не выходит из RED).
+# Единственный узел, управляющий кворумом кластера — осознанный компромисс
+# 2-узловой схемы.
+network.host: 0.0.0.0
+cluster.name: coffee-lab
+node.name: os-hot
+# Hot/Warm-разделение — атрибутом temp (а не tier-ролями data_hot/data_content:
+# в 3.8.0 они блокируют аллокацию системных индексов; generic-роль data — паттерн
+# из корпуса однокурсников). ISM переводит индексы allocation require.temp.
+node.roles: [cluster_manager, data, ingest]
+node.attr.temp: hot
+
+discovery.seed_hosts: [os-hot, os-warm]
+cluster.initial_cluster_manager_nodes: [os-hot]
+
+# Пиры соединяются по DNS-имени (оно в SAN серта), а не по IP контейнера
+transport.publish_host: os-hot
+
+# TLS на транспортном уровне (9300)
+plugins.security.ssl.transport.pemcert_filepath: pki/os-hot.crt
+plugins.security.ssl.transport.pemkey_filepath: pki/os-hot.key
+plugins.security.ssl.transport.pemtrustedcas_filepath: pki/root-ca.crt
+plugins.security.ssl.transport.enforce_hostname_verification: true
+
+# TLS на REST-уровне (9200)
+plugins.security.ssl.http.enabled: true
+plugins.security.ssl.http.pemcert_filepath: pki/os-hot.crt
+plugins.security.ssl.http.pemkey_filepath: pki/os-hot.key
+plugins.security.ssl.http.pemtrustedcas_filepath: pki/root-ca.crt
+
+# DN в RFC2253-порядке (RFC2253 разворачивает компоненты subject)
+plugins.security.authcz.admin_dn:
+  - "CN=admin,O=Coffee Lab"
+plugins.security.nodes_dn:
+  - "CN=os-hot,O=Coffee Lab"
+  - "CN=os-warm,O=Coffee Lab"
+
+# Security index инициализируется файлами из config/opensearch-security
+# (наш internal_users.yml), демо-конфиг отключён на уровне образа.
+plugins.security.allow_default_init_securityindex: true
+
+# Доступ к Security REST API (создание ролей/маппингов без securityadmin)
+plugins.security.restapi.roles_enabled:
+  - "all_access"
+  - "security_rest_api_access"
+
+# Метрики узлов (JVM/CPU/thread pools) экспортёр отдаёт по умолчанию (фильтр
+# _local): отдельных настроек плагину не требуется

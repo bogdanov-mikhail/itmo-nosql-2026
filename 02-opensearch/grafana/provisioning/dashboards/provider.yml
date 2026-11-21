@@ -1,0 +1,11 @@
+# Provisioning дашбордов: файлы из тома, обновление на лету.
+apiVersion: 1
+providers:
+  - name: coffee-lab
+    orgId: 1
+    folder: Coffee Lab
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    options:
+      path: /var/lib/grafana/dashboards

@@ -5,3 +5,6 @@ __pycache__/
 venv/
 .env
 README.md
+.idea/
+!02-opensearch/README.md
+assets/_tmp/

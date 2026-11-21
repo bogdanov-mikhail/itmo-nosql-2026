@@ -1,0 +1,13 @@
+{
+  "cluster_permissions": [
+    "cluster:monitor/main",
+    "cluster:monitor/health",
+    "cluster:monitor/state",
+    "cluster:monitor/nodes/info",
+    "cluster:monitor/nodes/stats",
+    "cluster:monitor/prometheus/metrics"
+  ],
+  "index_permissions": [
+    {"index_patterns": ["*"], "allowed_actions": ["indices:monitor/stats"]}
+  ]
+}
