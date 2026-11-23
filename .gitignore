@@ -4,4 +4,7 @@ __pycache__/
 .venv/
 venv/
 .env
+.idea/
 README.md
+!03-redis/README.md
+!03-redis/load/README.md

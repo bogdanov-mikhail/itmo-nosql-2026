@@ -1,0 +1,17 @@
+flowchart LR
+    k6["k6 (нагрузка)"] -->|HTTP| int
+    subgraph app["Kora-приложение (Kotlin, Undertow, JDK 25)"]
+        int["1-2. Интерсептор:<br/>X-API-Key → тариф,<br/>per-client token bucket (Lua)"]
+        ctl["3. CourseController<br/>@RateLimited(GlobalApiLimiter)"]
+        cat["4. Каталог (100 курсов)"]
+        met["Micrometer /metrics<br/>(system-порт)"]
+    end
+    int -->|allow| ctl
+    ctl -->|allow| cat
+    int -->|"deny → 429 client"| k429c["429 + Retry-After"]
+    ctl -->|"deny → 429 platform"| k429p["429"]
+    ctl -.->|"Redis недоступен → 503"| k503["503"]
+    int -->|EVALSHA| redis[("Redis 8<br/>requirepass")]
+    ctl -->|"состояние GCRA"| redis
+    redis --> exporter["redis_exporter"] --> prom["Prometheus"] --> graf["Grafana"]
+    met --> prom

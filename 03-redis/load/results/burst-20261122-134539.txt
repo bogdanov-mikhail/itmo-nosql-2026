@@ -1,0 +1,157 @@
+ Container 03-redis-k6-run-daebe435b7f9 Creating 
+ Container 03-redis-k6-run-daebe435b7f9 Created 
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: /load/burst.js
+        output: -
+
+     scenarios: (100.00%) 2 scenarios, 70 max VUs, 10m30s max duration (incl. graceful stop):
+              * burst: 1 iterations for each of 30 VUs (maxDuration: 10m0s, exec: burstPhase, gracefulStop: 30s)
+              * steady: 25.00 iterations/s for 20s (maxVUs: 10-40, exec: steadyPhase, startTime: 3s, gracefulStop: 30s)
+
+
+running (00m01.0s), 00/40 VUs, 30 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs   00m00.0s/10m0s  30/30 iters, 1 per VU
+steady • [   0% ] waiting  2.0s           
+
+running (00m02.0s), 00/40 VUs, 30 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs   00m00.0s/10m0s  30/30 iters, 1 per VU
+steady • [   0% ] waiting  1.0s           
+
+running (00m03.0s), 00/40 VUs, 30 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs   00m00.0s/10m0s  30/30 iters, 1 per VU
+steady • [   0% ] waiting  0.0s           
+
+running (00m04.0s), 00/40 VUs, 55 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [   5% ] 00/10 VUs  01.0s/20s       25.00 iters/s
+
+running (00m05.0s), 00/40 VUs, 80 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  10% ] 00/10 VUs  02.0s/20s       25.00 iters/s
+
+running (00m06.0s), 00/40 VUs, 105 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  15% ] 00/10 VUs  03.0s/20s       25.00 iters/s
+
+running (00m07.0s), 00/40 VUs, 130 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  20% ] 00/10 VUs  04.0s/20s       25.00 iters/s
+
+running (00m08.0s), 00/40 VUs, 155 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  25% ] 00/10 VUs  05.0s/20s       25.00 iters/s
+
+running (00m09.0s), 00/40 VUs, 180 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  30% ] 00/10 VUs  06.0s/20s       25.00 iters/s
+
+running (00m10.0s), 00/40 VUs, 205 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  35% ] 00/10 VUs  07.0s/20s       25.00 iters/s
+
+running (00m11.0s), 01/40 VUs, 230 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  40% ] 01/10 VUs  08.0s/20s       25.00 iters/s
+
+running (00m12.0s), 00/40 VUs, 255 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  45% ] 00/10 VUs  09.0s/20s       25.00 iters/s
+
+running (00m13.0s), 00/40 VUs, 280 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  50% ] 00/10 VUs  10.0s/20s       25.00 iters/s
+
+running (00m14.0s), 00/40 VUs, 305 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  55% ] 00/10 VUs  11.0s/20s       25.00 iters/s
+
+running (00m15.0s), 00/40 VUs, 330 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  60% ] 00/10 VUs  12.0s/20s       25.00 iters/s
+
+running (00m16.0s), 00/40 VUs, 355 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  65% ] 00/10 VUs  13.0s/20s       25.00 iters/s
+
+running (00m17.0s), 00/40 VUs, 380 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  70% ] 00/10 VUs  14.0s/20s       25.00 iters/s
+
+running (00m18.0s), 00/40 VUs, 405 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  75% ] 00/10 VUs  15.0s/20s       25.00 iters/s
+
+running (00m19.0s), 00/40 VUs, 430 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  80% ] 00/10 VUs  16.0s/20s       25.00 iters/s
+
+running (00m20.0s), 00/40 VUs, 455 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  85% ] 00/10 VUs  17.0s/20s       25.00 iters/s
+
+running (00m21.0s), 00/40 VUs, 480 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  90% ] 00/10 VUs  18.0s/20s       25.00 iters/s
+
+running (00m22.0s), 00/40 VUs, 505 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [  95% ] 00/10 VUs  19.0s/20s       25.00 iters/s
+
+running (00m23.0s), 00/40 VUs, 530 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady   [ 100% ] 00/10 VUs  20.0s/20s       25.00 iters/s
+
+
+  █ THRESHOLDS 
+
+    burst_allowed
+    ✓ 'count>=15' count=20
+
+    burst_rejected_client
+    ✓ 'count>=5' count=10
+
+    steady_allowed
+    ✓ 'count>=150' count=219
+    ✓ 'count<=280' count=219
+
+    steady_rejected
+    ✓ 'count>=250' count=281
+
+
+  █ TOTAL RESULTS 
+
+    CUSTOM
+    burst_allowed..................: 20     0.86951/s
+    burst_rejected_client..........: 10     0.434755/s
+    steady_allowed.................: 219    9.521134/s
+    steady_rejected................: 281    12.216614/s
+
+    HTTP
+    http_req_duration..............: avg=2.64ms min=396.41µs med=2.42ms max=10.09ms p(90)=4.39ms p(95)=6.53ms
+      { expected_response:true }...: avg=3.24ms min=707.91µs med=3.13ms max=9.15ms  p(90)=5.31ms p(95)=8.49ms
+    http_req_failed................: 54.90% 291 out of 530
+    http_reqs......................: 530    23.042013/s
+
+    EXECUTION
+    iteration_duration.............: avg=3.04ms min=441.62µs med=2.75ms max=11.6ms  p(90)=5.05ms p(95)=8.1ms 
+    iterations.....................: 530    23.042013/s
+    vus............................: 0      min=0          max=1 
+    vus_max........................: 40     min=40         max=40
+
+    NETWORK
+    data_received..................: 1.2 MB 52 kB/s
+    data_sent......................: 64 kB  2.8 kB/s
+
+
+
+
+running (00m23.0s), 00/40 VUs, 530 complete and 0 interrupted iterations
+burst  ✓ [ 100% ] 30 VUs     00m00.0s/10m0s  30/30 iters, 1 per VU
+steady ✓ [ 100% ] 00/10 VUs  20s             25.00 iters/s

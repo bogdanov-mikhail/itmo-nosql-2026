@@ -1,0 +1,276 @@
+ Container 03-redis-k6-run-3580479c5051 Creating 
+ Container 03-redis-k6-run-3580479c5051 Created 
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: /load/platform.js
+        output: -
+
+     scenarios: (100.00%) 8 scenarios, 560 max VUs, 50s max duration (incl. graceful stop):
+              * client0: 60.00 iterations/s for 20s (maxVUs: 15-70, exec: default, gracefulStop: 30s)
+              * client1: 60.00 iterations/s for 20s (maxVUs: 15-70, exec: default, gracefulStop: 30s)
+              * client2: 60.00 iterations/s for 20s (maxVUs: 15-70, exec: default, gracefulStop: 30s)
+              * client3: 60.00 iterations/s for 20s (maxVUs: 15-70, exec: default, gracefulStop: 30s)
+              * client4: 60.00 iterations/s for 20s (maxVUs: 15-70, exec: default, gracefulStop: 30s)
+              * client5: 60.00 iterations/s for 20s (maxVUs: 15-70, exec: default, gracefulStop: 30s)
+              * client6: 60.00 iterations/s for 20s (maxVUs: 15-70, exec: default, gracefulStop: 30s)
+              * client7: 60.00 iterations/s for 20s (maxVUs: 15-70, exec: default, gracefulStop: 30s)
+
+
+running (01.0s), 000/120 VUs, 464 complete and 0 interrupted iterations
+client0   [   5% ] 00/15 VUs  01.0s/20s  60.00 iters/s
+client1   [   5% ] 00/15 VUs  01.0s/20s  60.00 iters/s
+client2   [   5% ] 00/15 VUs  01.0s/20s  60.00 iters/s
+client3   [   5% ] 00/15 VUs  01.0s/20s  60.00 iters/s
+client4   [   5% ] 00/15 VUs  01.0s/20s  60.00 iters/s
+client5   [   5% ] 00/15 VUs  01.0s/20s  60.00 iters/s
+client6   [   5% ] 00/15 VUs  01.0s/20s  60.00 iters/s
+client7   [   5% ] 00/15 VUs  01.0s/20s  60.00 iters/s
+
+running (02.0s), 000/120 VUs, 944 complete and 0 interrupted iterations
+client0   [  10% ] 00/15 VUs  02.0s/20s  60.00 iters/s
+client1   [  10% ] 00/15 VUs  02.0s/20s  60.00 iters/s
+client2   [  10% ] 00/15 VUs  02.0s/20s  60.00 iters/s
+client3   [  10% ] 00/15 VUs  02.0s/20s  60.00 iters/s
+client4   [  10% ] 00/15 VUs  02.0s/20s  60.00 iters/s
+client5   [  10% ] 00/15 VUs  02.0s/20s  60.00 iters/s
+client6   [  10% ] 00/15 VUs  02.0s/20s  60.00 iters/s
+client7   [  10% ] 00/15 VUs  02.0s/20s  60.00 iters/s
+
+running (03.0s), 000/120 VUs, 1424 complete and 0 interrupted iterations
+client0   [  15% ] 00/15 VUs  03.0s/20s  60.00 iters/s
+client1   [  15% ] 00/15 VUs  03.0s/20s  60.00 iters/s
+client2   [  15% ] 00/15 VUs  03.0s/20s  60.00 iters/s
+client3   [  15% ] 00/15 VUs  03.0s/20s  60.00 iters/s
+client4   [  15% ] 00/15 VUs  03.0s/20s  60.00 iters/s
+client5   [  15% ] 00/15 VUs  03.0s/20s  60.00 iters/s
+client6   [  15% ] 00/15 VUs  03.0s/20s  60.00 iters/s
+client7   [  15% ] 00/15 VUs  03.0s/20s  60.00 iters/s
+
+running (04.0s), 000/120 VUs, 1904 complete and 0 interrupted iterations
+client0   [  20% ] 00/15 VUs  04.0s/20s  60.00 iters/s
+client1   [  20% ] 00/15 VUs  04.0s/20s  60.00 iters/s
+client2   [  20% ] 00/15 VUs  04.0s/20s  60.00 iters/s
+client3   [  20% ] 00/15 VUs  04.0s/20s  60.00 iters/s
+client4   [  20% ] 00/15 VUs  04.0s/20s  60.00 iters/s
+client5   [  20% ] 00/15 VUs  04.0s/20s  60.00 iters/s
+client6   [  20% ] 00/15 VUs  04.0s/20s  60.00 iters/s
+client7   [  20% ] 00/15 VUs  04.0s/20s  60.00 iters/s
+
+running (05.0s), 000/120 VUs, 2384 complete and 0 interrupted iterations
+client0   [  25% ] 00/15 VUs  05.0s/20s  60.00 iters/s
+client1   [  25% ] 00/15 VUs  05.0s/20s  60.00 iters/s
+client2   [  25% ] 00/15 VUs  05.0s/20s  60.00 iters/s
+client3   [  25% ] 00/15 VUs  05.0s/20s  60.00 iters/s
+client4   [  25% ] 00/15 VUs  05.0s/20s  60.00 iters/s
+client5   [  25% ] 00/15 VUs  05.0s/20s  60.00 iters/s
+client6   [  25% ] 00/15 VUs  05.0s/20s  60.00 iters/s
+client7   [  25% ] 00/15 VUs  05.0s/20s  60.00 iters/s
+
+running (06.0s), 000/120 VUs, 2864 complete and 0 interrupted iterations
+client0   [  30% ] 00/15 VUs  06.0s/20s  60.00 iters/s
+client1   [  30% ] 00/15 VUs  06.0s/20s  60.00 iters/s
+client2   [  30% ] 00/15 VUs  06.0s/20s  60.00 iters/s
+client3   [  30% ] 00/15 VUs  06.0s/20s  60.00 iters/s
+client4   [  30% ] 00/15 VUs  06.0s/20s  60.00 iters/s
+client5   [  30% ] 00/15 VUs  06.0s/20s  60.00 iters/s
+client6   [  30% ] 00/15 VUs  06.0s/20s  60.00 iters/s
+client7   [  30% ] 00/15 VUs  06.0s/20s  60.00 iters/s
+
+running (07.0s), 000/120 VUs, 3344 complete and 0 interrupted iterations
+client0   [  35% ] 00/15 VUs  07.0s/20s  60.00 iters/s
+client1   [  35% ] 00/15 VUs  07.0s/20s  60.00 iters/s
+client2   [  35% ] 00/15 VUs  07.0s/20s  60.00 iters/s
+client3   [  35% ] 00/15 VUs  07.0s/20s  60.00 iters/s
+client4   [  35% ] 00/15 VUs  07.0s/20s  60.00 iters/s
+client5   [  35% ] 00/15 VUs  07.0s/20s  60.00 iters/s
+client6   [  35% ] 00/15 VUs  07.0s/20s  60.00 iters/s
+client7   [  35% ] 00/15 VUs  07.0s/20s  60.00 iters/s
+
+running (08.0s), 000/120 VUs, 3824 complete and 0 interrupted iterations
+client0   [  40% ] 00/15 VUs  08.0s/20s  60.00 iters/s
+client1   [  40% ] 00/15 VUs  08.0s/20s  60.00 iters/s
+client2   [  40% ] 00/15 VUs  08.0s/20s  60.00 iters/s
+client3   [  40% ] 00/15 VUs  08.0s/20s  60.00 iters/s
+client4   [  40% ] 00/15 VUs  08.0s/20s  60.00 iters/s
+client5   [  40% ] 00/15 VUs  08.0s/20s  60.00 iters/s
+client6   [  40% ] 00/15 VUs  08.0s/20s  60.00 iters/s
+client7   [  40% ] 00/15 VUs  08.0s/20s  60.00 iters/s
+
+running (09.0s), 000/120 VUs, 4304 complete and 0 interrupted iterations
+client0   [  45% ] 00/15 VUs  09.0s/20s  60.00 iters/s
+client1   [  45% ] 00/15 VUs  09.0s/20s  60.00 iters/s
+client2   [  45% ] 00/15 VUs  09.0s/20s  60.00 iters/s
+client3   [  45% ] 00/15 VUs  09.0s/20s  60.00 iters/s
+client4   [  45% ] 00/15 VUs  09.0s/20s  60.00 iters/s
+client5   [  45% ] 00/15 VUs  09.0s/20s  60.00 iters/s
+client6   [  45% ] 00/15 VUs  09.0s/20s  60.00 iters/s
+client7   [  45% ] 00/15 VUs  09.0s/20s  60.00 iters/s
+
+running (10.0s), 000/120 VUs, 4784 complete and 0 interrupted iterations
+client0   [  50% ] 00/15 VUs  10.0s/20s  60.00 iters/s
+client1   [  50% ] 00/15 VUs  10.0s/20s  60.00 iters/s
+client2   [  50% ] 00/15 VUs  10.0s/20s  60.00 iters/s
+client3   [  50% ] 00/15 VUs  10.0s/20s  60.00 iters/s
+client4   [  50% ] 00/15 VUs  10.0s/20s  60.00 iters/s
+client5   [  50% ] 00/15 VUs  10.0s/20s  60.00 iters/s
+client6   [  50% ] 00/15 VUs  10.0s/20s  60.00 iters/s
+client7   [  50% ] 00/15 VUs  10.0s/20s  60.00 iters/s
+
+running (11.0s), 000/120 VUs, 5264 complete and 0 interrupted iterations
+client0   [  55% ] 00/15 VUs  11.0s/20s  60.00 iters/s
+client1   [  55% ] 00/15 VUs  11.0s/20s  60.00 iters/s
+client2   [  55% ] 00/15 VUs  11.0s/20s  60.00 iters/s
+client3   [  55% ] 00/15 VUs  11.0s/20s  60.00 iters/s
+client4   [  55% ] 00/15 VUs  11.0s/20s  60.00 iters/s
+client5   [  55% ] 00/15 VUs  11.0s/20s  60.00 iters/s
+client6   [  55% ] 00/15 VUs  11.0s/20s  60.00 iters/s
+client7   [  55% ] 00/15 VUs  11.0s/20s  60.00 iters/s
+
+running (12.0s), 000/120 VUs, 5744 complete and 0 interrupted iterations
+client0   [  60% ] 00/15 VUs  12.0s/20s  60.00 iters/s
+client1   [  60% ] 00/15 VUs  12.0s/20s  60.00 iters/s
+client2   [  60% ] 00/15 VUs  12.0s/20s  60.00 iters/s
+client3   [  60% ] 00/15 VUs  12.0s/20s  60.00 iters/s
+client4   [  60% ] 00/15 VUs  12.0s/20s  60.00 iters/s
+client5   [  60% ] 00/15 VUs  12.0s/20s  60.00 iters/s
+client6   [  60% ] 00/15 VUs  12.0s/20s  60.00 iters/s
+client7   [  60% ] 00/15 VUs  12.0s/20s  60.00 iters/s
+
+running (13.0s), 000/120 VUs, 6224 complete and 0 interrupted iterations
+client0   [  65% ] 00/15 VUs  13.0s/20s  60.00 iters/s
+client1   [  65% ] 00/15 VUs  13.0s/20s  60.00 iters/s
+client2   [  65% ] 00/15 VUs  13.0s/20s  60.00 iters/s
+client3   [  65% ] 00/15 VUs  13.0s/20s  60.00 iters/s
+client4   [  65% ] 00/15 VUs  13.0s/20s  60.00 iters/s
+client5   [  65% ] 00/15 VUs  13.0s/20s  60.00 iters/s
+client6   [  65% ] 00/15 VUs  13.0s/20s  60.00 iters/s
+client7   [  65% ] 00/15 VUs  13.0s/20s  60.00 iters/s
+
+running (14.0s), 000/120 VUs, 6704 complete and 0 interrupted iterations
+client0   [  70% ] 00/15 VUs  14.0s/20s  60.00 iters/s
+client1   [  70% ] 00/15 VUs  14.0s/20s  60.00 iters/s
+client2   [  70% ] 00/15 VUs  14.0s/20s  60.00 iters/s
+client3   [  70% ] 00/15 VUs  14.0s/20s  60.00 iters/s
+client4   [  70% ] 00/15 VUs  14.0s/20s  60.00 iters/s
+client5   [  70% ] 00/15 VUs  14.0s/20s  60.00 iters/s
+client6   [  70% ] 00/15 VUs  14.0s/20s  60.00 iters/s
+client7   [  70% ] 00/15 VUs  14.0s/20s  60.00 iters/s
+
+running (15.0s), 000/120 VUs, 7184 complete and 0 interrupted iterations
+client0   [  75% ] 00/15 VUs  15.0s/20s  60.00 iters/s
+client1   [  75% ] 00/15 VUs  15.0s/20s  60.00 iters/s
+client2   [  75% ] 00/15 VUs  15.0s/20s  60.00 iters/s
+client3   [  75% ] 00/15 VUs  15.0s/20s  60.00 iters/s
+client4   [  75% ] 00/15 VUs  15.0s/20s  60.00 iters/s
+client5   [  75% ] 00/15 VUs  15.0s/20s  60.00 iters/s
+client6   [  75% ] 00/15 VUs  15.0s/20s  60.00 iters/s
+client7   [  75% ] 00/15 VUs  15.0s/20s  60.00 iters/s
+
+running (16.0s), 000/120 VUs, 7664 complete and 0 interrupted iterations
+client0   [  80% ] 00/15 VUs  16.0s/20s  60.00 iters/s
+client1   [  80% ] 00/15 VUs  16.0s/20s  60.00 iters/s
+client2   [  80% ] 00/15 VUs  16.0s/20s  60.00 iters/s
+client3   [  80% ] 00/15 VUs  16.0s/20s  60.00 iters/s
+client4   [  80% ] 00/15 VUs  16.0s/20s  60.00 iters/s
+client5   [  80% ] 00/15 VUs  16.0s/20s  60.00 iters/s
+client6   [  80% ] 00/15 VUs  16.0s/20s  60.00 iters/s
+client7   [  80% ] 00/15 VUs  16.0s/20s  60.00 iters/s
+
+running (17.0s), 000/120 VUs, 8144 complete and 0 interrupted iterations
+client0   [  85% ] 00/15 VUs  17.0s/20s  60.00 iters/s
+client1   [  85% ] 00/15 VUs  17.0s/20s  60.00 iters/s
+client2   [  85% ] 00/15 VUs  17.0s/20s  60.00 iters/s
+client3   [  85% ] 00/15 VUs  17.0s/20s  60.00 iters/s
+client4   [  85% ] 00/15 VUs  17.0s/20s  60.00 iters/s
+client5   [  85% ] 00/15 VUs  17.0s/20s  60.00 iters/s
+client6   [  85% ] 00/15 VUs  17.0s/20s  60.00 iters/s
+client7   [  85% ] 00/15 VUs  17.0s/20s  60.00 iters/s
+
+running (18.0s), 000/120 VUs, 8624 complete and 0 interrupted iterations
+client0   [  90% ] 00/15 VUs  18.0s/20s  60.00 iters/s
+client1   [  90% ] 00/15 VUs  18.0s/20s  60.00 iters/s
+client2   [  90% ] 00/15 VUs  18.0s/20s  60.00 iters/s
+client3   [  90% ] 00/15 VUs  18.0s/20s  60.00 iters/s
+client4   [  90% ] 00/15 VUs  18.0s/20s  60.00 iters/s
+client5   [  90% ] 00/15 VUs  18.0s/20s  60.00 iters/s
+client6   [  90% ] 00/15 VUs  18.0s/20s  60.00 iters/s
+client7   [  90% ] 00/15 VUs  18.0s/20s  60.00 iters/s
+
+running (19.0s), 000/120 VUs, 9104 complete and 0 interrupted iterations
+client0   [  95% ] 00/15 VUs  19.0s/20s  60.00 iters/s
+client1   [  95% ] 00/15 VUs  19.0s/20s  60.00 iters/s
+client2   [  95% ] 00/15 VUs  19.0s/20s  60.00 iters/s
+client3   [  95% ] 00/15 VUs  19.0s/20s  60.00 iters/s
+client4   [  95% ] 00/15 VUs  19.0s/20s  60.00 iters/s
+client5   [  95% ] 00/15 VUs  19.0s/20s  60.00 iters/s
+client6   [  95% ] 00/15 VUs  19.0s/20s  60.00 iters/s
+client7   [  95% ] 00/15 VUs  19.0s/20s  60.00 iters/s
+
+running (20.0s), 000/120 VUs, 9584 complete and 0 interrupted iterations
+client0   [ 100% ] 00/15 VUs  20.0s/20s  60.00 iters/s
+client1   [ 100% ] 00/15 VUs  20.0s/20s  60.00 iters/s
+client2   [ 100% ] 00/15 VUs  20.0s/20s  60.00 iters/s
+client3   [ 100% ] 00/15 VUs  20.0s/20s  60.00 iters/s
+client4   [ 100% ] 00/15 VUs  20.0s/20s  60.00 iters/s
+client5   [ 100% ] 00/15 VUs  20.0s/20s  60.00 iters/s
+client6   [ 100% ] 00/15 VUs  20.0s/20s  60.00 iters/s
+client7   [ 100% ] 00/15 VUs  20.0s/20s  60.00 iters/s
+
+
+  █ THRESHOLDS 
+
+    platform_allowed
+    ✓ 'count>0' count=6979
+
+    rejected_client
+    ✓ 'count==0' count=0
+
+    rejected_platform
+    ✓ 'count>0' count=2628
+
+    server_errors
+    ✓ 'count==0' count=0
+
+
+  █ TOTAL RESULTS 
+
+    CUSTOM
+    platform_allowed...............: 6979   348.828564/s
+    rejected_client................: 0      0/s
+    rejected_platform..............: 2628   131.354272/s
+    server_errors..................: 0      0/s
+
+    HTTP
+    http_req_duration..............: avg=2.15ms min=371.25µs med=1.49ms max=80.28ms p(90)=3.05ms p(95)=4.68ms
+      { expected_response:true }...: avg=2.17ms min=371.25µs med=1.4ms  max=80.28ms p(90)=2.97ms p(95)=5.17ms
+    http_req_failed................: 27.35% 2628 out of 9607
+    http_reqs......................: 9607   480.182836/s
+
+    EXECUTION
+    iteration_duration.............: avg=2.26ms min=390.08µs med=1.57ms max=82.58ms p(90)=3.25ms p(95)=4.85ms
+    iterations.....................: 9607   480.182836/s
+    vus............................: 0      min=0            max=0  
+    vus_max........................: 120    min=120          max=120
+
+    NETWORK
+    data_received..................: 34 MB  1.7 MB/s
+    data_sent......................: 1.2 MB 60 kB/s
+
+
+
+
+running (20.0s), 000/120 VUs, 9607 complete and 0 interrupted iterations
+client0 ✓ [ 100% ] 00/15 VUs  20s  60.00 iters/s
+client1 ✓ [ 100% ] 00/15 VUs  20s  60.00 iters/s
+client2 ✓ [ 100% ] 00/15 VUs  20s  60.00 iters/s
+client3 ✓ [ 100% ] 00/15 VUs  20s  60.00 iters/s
+client4 ✓ [ 100% ] 00/15 VUs  20s  60.00 iters/s
+client5 ✓ [ 100% ] 00/15 VUs  20s  60.00 iters/s
+client6 ✓ [ 100% ] 00/15 VUs  20s  60.00 iters/s
+client7 ✓ [ 100% ] 00/15 VUs  20s  60.00 iters/s
