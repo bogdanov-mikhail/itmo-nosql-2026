@@ -1,0 +1,145 @@
+ Container 03-redis-k6-run-63f9d9f6f91e Creating 
+ Container 03-redis-k6-run-63f9d9f6f91e Created 
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: /load/fair.js
+        output: -
+
+     scenarios: (100.00%) 2 scenarios, 170 max VUs, 50s max duration (incl. graceful stop):
+              * heavy: 120.00 iterations/s for 20s (maxVUs: 30-150, exec: heavyPhase, gracefulStop: 30s)
+              * light: 5.00 iterations/s for 20s (maxVUs: 5-20, exec: lightPhase, gracefulStop: 30s)
+
+
+running (01.0s), 001/035 VUs, 121 complete and 0 interrupted iterations
+heavy   [   5% ] 001/030 VUs  01.0s/20s  120.00 iters/s
+light   [   5% ] 00/05 VUs    01.0s/20s  5.00 iters/s
+
+running (02.0s), 001/035 VUs, 246 complete and 0 interrupted iterations
+heavy   [  10% ] 001/030 VUs  02.0s/20s  120.00 iters/s
+light   [  10% ] 00/05 VUs    02.0s/20s  5.00 iters/s
+
+running (03.0s), 000/035 VUs, 371 complete and 0 interrupted iterations
+heavy   [  15% ] 001/030 VUs  03.0s/20s  120.00 iters/s
+light   [  15% ] 00/05 VUs    03.0s/20s  5.00 iters/s
+
+running (04.0s), 001/035 VUs, 496 complete and 0 interrupted iterations
+heavy   [  20% ] 001/030 VUs  04.0s/20s  120.00 iters/s
+light   [  20% ] 00/05 VUs    04.0s/20s  5.00 iters/s
+
+running (05.0s), 001/035 VUs, 621 complete and 0 interrupted iterations
+heavy   [  25% ] 001/030 VUs  05.0s/20s  120.00 iters/s
+light   [  25% ] 00/05 VUs    05.0s/20s  5.00 iters/s
+
+running (06.0s), 001/035 VUs, 746 complete and 0 interrupted iterations
+heavy   [  30% ] 001/030 VUs  06.0s/20s  120.00 iters/s
+light   [  30% ] 00/05 VUs    06.0s/20s  5.00 iters/s
+
+running (07.0s), 001/035 VUs, 871 complete and 0 interrupted iterations
+heavy   [  35% ] 001/030 VUs  07.0s/20s  120.00 iters/s
+light   [  35% ] 00/05 VUs    07.0s/20s  5.00 iters/s
+
+running (08.0s), 001/035 VUs, 996 complete and 0 interrupted iterations
+heavy   [  40% ] 001/030 VUs  08.0s/20s  120.00 iters/s
+light   [  40% ] 00/05 VUs    08.0s/20s  5.00 iters/s
+
+running (09.0s), 001/035 VUs, 1121 complete and 0 interrupted iterations
+heavy   [  45% ] 001/030 VUs  09.0s/20s  120.00 iters/s
+light   [  45% ] 00/05 VUs    09.0s/20s  5.00 iters/s
+
+running (10.0s), 001/035 VUs, 1246 complete and 0 interrupted iterations
+heavy   [  50% ] 001/030 VUs  10.0s/20s  120.00 iters/s
+light   [  50% ] 00/05 VUs    10.0s/20s  5.00 iters/s
+
+running (11.0s), 001/035 VUs, 1371 complete and 0 interrupted iterations
+heavy   [  55% ] 001/030 VUs  11.0s/20s  120.00 iters/s
+light   [  55% ] 00/05 VUs    11.0s/20s  5.00 iters/s
+
+running (12.0s), 001/035 VUs, 1496 complete and 0 interrupted iterations
+heavy   [  60% ] 001/030 VUs  12.0s/20s  120.00 iters/s
+light   [  60% ] 00/05 VUs    12.0s/20s  5.00 iters/s
+
+running (13.0s), 001/035 VUs, 1621 complete and 0 interrupted iterations
+heavy   [  65% ] 001/030 VUs  13.0s/20s  120.00 iters/s
+light   [  65% ] 00/05 VUs    13.0s/20s  5.00 iters/s
+
+running (14.0s), 001/035 VUs, 1746 complete and 0 interrupted iterations
+heavy   [  70% ] 001/030 VUs  14.0s/20s  120.00 iters/s
+light   [  70% ] 00/05 VUs    14.0s/20s  5.00 iters/s
+
+running (15.0s), 000/035 VUs, 1871 complete and 0 interrupted iterations
+heavy   [  75% ] 001/030 VUs  15.0s/20s  120.00 iters/s
+light   [  75% ] 00/05 VUs    15.0s/20s  5.00 iters/s
+
+running (16.0s), 001/035 VUs, 1996 complete and 0 interrupted iterations
+heavy   [  80% ] 001/030 VUs  16.0s/20s  120.00 iters/s
+light   [  80% ] 00/05 VUs    16.0s/20s  5.00 iters/s
+
+running (17.0s), 001/035 VUs, 2121 complete and 0 interrupted iterations
+heavy   [  85% ] 001/030 VUs  17.0s/20s  120.00 iters/s
+light   [  85% ] 00/05 VUs    17.0s/20s  5.00 iters/s
+
+running (18.0s), 001/035 VUs, 2246 complete and 0 interrupted iterations
+heavy   [  90% ] 001/030 VUs  18.0s/20s  120.00 iters/s
+light   [  90% ] 00/05 VUs    18.0s/20s  5.00 iters/s
+
+running (19.0s), 001/035 VUs, 2371 complete and 0 interrupted iterations
+heavy   [  95% ] 001/030 VUs  19.0s/20s  120.00 iters/s
+light   [  95% ] 00/05 VUs    19.0s/20s  5.00 iters/s
+
+running (20.0s), 001/035 VUs, 2496 complete and 0 interrupted iterations
+heavy   [ 100% ] 001/030 VUs  20.0s/20s  120.00 iters/s
+light   [ 100% ] 00/05 VUs    20.0s/20s  5.00 iters/s
+
+
+  █ THRESHOLDS 
+
+    heavy_reject_share
+    ✓ 'rate>=0.5' rate=54.22%
+
+    heavy_rejected_client
+    ✓ 'count>0' count=1302
+
+    light_allowed
+    ✓ 'count>=95' count=101
+
+    light_rejected
+    ✓ 'count==0' count=0
+
+
+  █ TOTAL RESULTS 
+
+    CUSTOM
+    heavy_allowed..................: 1099   54.934268/s
+    heavy_reject_share.............: 54.22% 1302 out of 2401
+    heavy_rejected_client..........: 1302   65.081362/s
+    light_allowed..................: 101    5.048554/s
+    light_rejected.................: 0      0/s
+
+    HTTP
+    http_req_duration..............: avg=1.37ms min=225.95µs med=1.13ms max=31.36ms p(90)=2.41ms p(95)=2.82ms
+      { expected_response:true }...: avg=1.7ms  min=405.79µs med=1.34ms max=31.36ms p(90)=2.77ms p(95)=3.16ms
+    http_req_failed................: 52.03% 1302 out of 2502
+    http_reqs......................: 2502   125.064184/s
+
+    EXECUTION
+    iteration_duration.............: avg=1.53ms min=256.37µs med=1.24ms max=31.54ms p(90)=2.67ms p(95)=3.11ms
+    iterations.....................: 2502   125.064184/s
+    vus............................: 1      min=0            max=1 
+    vus_max........................: 35     min=35           max=35
+
+    NETWORK
+    data_received..................: 5.9 MB 296 kB/s
+    data_sent......................: 312 kB 16 kB/s
+
+
+
+
+running (20.0s), 000/035 VUs, 2502 complete and 0 interrupted iterations
+heavy ✓ [ 100% ] 000/030 VUs  20s  120.00 iters/s
+light ✓ [ 100% ] 00/05 VUs    20s  5.00 iters/s

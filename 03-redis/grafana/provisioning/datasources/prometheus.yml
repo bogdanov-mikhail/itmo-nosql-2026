@@ -1,0 +1,13 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    # 5 s = шаг скрейпа: иначе Grafana считает $__rate_interval от дефолтных 15 s
+    # и сглаживает короткие всплески rps на панелях
+    timeInterval: 5s
+    isDefault: true
+    editable: false

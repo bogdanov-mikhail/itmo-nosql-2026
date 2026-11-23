@@ -1,0 +1,106 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      API_KEY_FREE: ${API_KEY_FREE}
+      API_KEY_STANDARD: ${API_KEY_STANDARD}
+      GLOBAL_LIMIT_FOR_PERIOD: ${GLOBAL_LIMIT_FOR_PERIOD:-300}
+      RATELIMIT_FREE_RATE: ${RATELIMIT_FREE_RATE:-10}
+      RATELIMIT_FREE_CAPACITY: ${RATELIMIT_FREE_CAPACITY:-20}
+      RATELIMIT_STANDARD_RATE: ${RATELIMIT_STANDARD_RATE:-50}
+      RATELIMIT_STANDARD_CAPACITY: ${RATELIMIT_STANDARD_CAPACITY:-100}
+    ports:
+      - "127.0.0.1:18080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    restart: unless-stopped
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.76.0
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:19090:9090"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:13000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  checks:
+    image: python:3.12-slim
+    working_dir: /work
+    volumes:
+      - ./checks:/work/checks:ro
+      - ./tests:/work/tests:ro
+    environment:
+      APP_BASE_URL: http://app:8080
+      SYSTEM_BASE_URL: http://app:8085
+      PROMETHEUS_URL: http://prometheus:9090
+      GRAFANA_URL: http://grafana:3000
+      GRAFANA_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      API_KEY_FREE: ${API_KEY_FREE}
+      API_KEY_STANDARD: ${API_KEY_STANDARD}
+    depends_on:
+      - app
+    profiles: ["tools"]
+
+  k6:
+    image: grafana/k6:1.4.2
+    working_dir: /load
+    volumes:
+      - ./load:/load:ro
+    environment:
+      APP_BASE_URL: http://app:8080
+      API_KEY_FREE: ${API_KEY_FREE}
+      API_KEY_STANDARD: ${API_KEY_STANDARD}
+    depends_on:
+      - app
+    profiles: ["load"]
+
+volumes:
+  redis-data:
+  prometheus-data:
+  grafana-data:

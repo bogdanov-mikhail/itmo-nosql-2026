@@ -10,8 +10,8 @@ import java.time.Duration
 object TestHttpClient {
 
     /**
-     * Игнорирует системный прокси macOS: прокси-шард иногда перехватывает
-     * localhost-запросы тестов и отвечает 407.
+     * Работает в обход системного прокси: он перехватывает localhost-запросы
+     * тестов и отвечает 407.
      */
     fun create(): HttpClient =
         HttpClient.newBuilder()
