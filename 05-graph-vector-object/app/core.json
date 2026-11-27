@@ -1,0 +1,274 @@
+{
+  "tables": [
+    {
+      "fqn": "mongo.spa.clients",
+      "name": "Клиенты студии",
+      "system": "mongodb",
+      "kind": "source",
+      "description": "Карточки клиентов SPA-студии: контакты, сегмент, дата первого визита.",
+      "rows_approx": 18400
+    },
+    {
+      "fqn": "mongo.spa.masters",
+      "name": "Мастера",
+      "system": "mongodb",
+      "kind": "source",
+      "description": "Справочник мастеров: специализация (массаж, косметология), график, стаж.",
+      "rows_approx": 96
+    },
+    {
+      "fqn": "mongo.spa.services",
+      "name": "Услуги",
+      "system": "mongodb",
+      "kind": "source",
+      "description": "Каталог услуг с длительностью и базовой ценой.",
+      "rows_approx": 142
+    },
+    {
+      "fqn": "mongo.spa.appointments",
+      "name": "Записи на сеансы",
+      "system": "mongodb",
+      "kind": "source",
+      "description": "Журнал записей: клиент, мастер, услуга, время, статус, стоимость.",
+      "rows_approx": 412000
+    },
+    {
+      "fqn": "mongo.spa.feedback",
+      "name": "Отзывы клиентов",
+      "system": "mongodb",
+      "kind": "source",
+      "description": "Оценки и текстовые отзывы клиентов после сеанса.",
+      "rows_approx": 38700
+    },
+    {
+      "fqn": "csv.price_list",
+      "name": "Прайс-лист",
+      "system": "csv",
+      "kind": "source",
+      "description": "Ежемесячная выгрузка прайс-листа из учётной системы.",
+      "rows_approx": 142
+    },
+    {
+      "fqn": "csv.room_schedule",
+      "name": "График кабинетов",
+      "system": "csv",
+      "kind": "source",
+      "description": "Загрузка кабинетов по часам, выгрузка администратора.",
+      "rows_approx": 8760
+    },
+    {
+      "fqn": "stg.clients",
+      "name": "Клиенты (staging)",
+      "system": "clickhouse",
+      "kind": "staging",
+      "description": "Очищенные карточки клиентов: телефоны нормализованы, дубли склеены.",
+      "rows_approx": 17800
+    },
+    {
+      "fqn": "stg.masters",
+      "name": "Мастера (staging)",
+      "system": "clickhouse",
+      "kind": "staging",
+      "description": "Справочник мастеров с приведёнными специализациями.",
+      "rows_approx": 94
+    },
+    {
+      "fqn": "stg.services",
+      "name": "Услуги (staging)",
+      "system": "clickhouse",
+      "kind": "staging",
+      "description": "Каталог услуг с актуальными ценами после сверки с прайсом.",
+      "rows_approx": 140
+    },
+    {
+      "fqn": "stg.appointments",
+      "name": "Записи (staging)",
+      "system": "clickhouse",
+      "kind": "staging",
+      "description": "Записи с приведёнными временем и статусами, тестовые отброшены.",
+      "rows_approx": 405000
+    },
+    {
+      "fqn": "stg.feedback",
+      "name": "Отзывы (staging)",
+      "system": "clickhouse",
+      "kind": "staging",
+      "description": "Отзывы с проставленными тональностью и темой обращения.",
+      "rows_approx": 38200
+    },
+    {
+      "fqn": "stg.prices",
+      "name": "Прайс-лист (staging)",
+      "system": "clickhouse",
+      "kind": "staging",
+      "description": "Прайс-лист, приведённый к единому справочнику услуг.",
+      "rows_approx": 140
+    },
+    {
+      "fqn": "stg.rooms",
+      "name": "Кабинеты (staging)",
+      "system": "clickhouse",
+      "kind": "staging",
+      "description": "График кабинетов с отметками ремонтов и простоев.",
+      "rows_approx": 8600
+    },
+    {
+      "fqn": "mart.visits_daily",
+      "name": "Визиты по дням",
+      "system": "clickhouse",
+      "kind": "mart",
+      "description": "Агрегат визитов по дням, услугам и мастерам.",
+      "rows_approx": 4600
+    },
+    {
+      "fqn": "mart.revenue_monthly",
+      "name": "Выручка по месяцам",
+      "system": "clickhouse",
+      "kind": "mart",
+      "description": "Выручка и средний чек по месяцам, услугам и каналам продаж.",
+      "rows_approx": 360
+    },
+    {
+      "fqn": "mart.master_load",
+      "name": "Загрузка мастеров",
+      "system": "clickhouse",
+      "kind": "mart",
+      "description": "Загрузка мастеров: доля занятых слотов, средняя длительность сеанса массажа и ухода.",
+      "rows_approx": 2900
+    },
+    {
+      "fqn": "mart.client_retention",
+      "name": "Удержание клиентов",
+      "system": "clickhouse",
+      "kind": "mart",
+      "description": "Когорты клиентов по месяцу первого визита и повторным покупкам.",
+      "rows_approx": 1250
+    },
+    {
+      "fqn": "mart.feedback_score",
+      "name": "Оценки сервиса",
+      "system": "clickhouse",
+      "kind": "mart",
+      "description": "Средние оценки и повторяющиеся темы из отзывов.",
+      "rows_approx": 850
+    },
+    {
+      "fqn": "report.revenue_dashboard",
+      "name": "Дашборд выручки",
+      "system": "report",
+      "kind": "report",
+      "description": "Финансовый дашборд руководителя: выручка, план, отклонения.",
+      "rows_approx": 12
+    },
+    {
+      "fqn": "report.master_performance",
+      "name": "Отчёт по мастерам",
+      "system": "report",
+      "kind": "report",
+      "description": "Рейтинг мастеров по загрузке, оценкам и числу массажей.",
+      "rows_approx": 96
+    },
+    {
+      "fqn": "report.retention_report",
+      "name": "Отчёт об удержании",
+      "system": "report",
+      "kind": "report",
+      "description": "Отток и возвращаемость клиентов по когортам.",
+      "rows_approx": 48
+    },
+    {
+      "fqn": "report.ops_daily",
+      "name": "Оперативная сводка",
+      "system": "report",
+      "kind": "report",
+      "description": "Ежедневная сводка для администраторов: визиты, загрузка, отмены.",
+      "rows_approx": 365
+    },
+    {
+      "fqn": "report.marketing_summary",
+      "name": "Сводка по каналам",
+      "system": "report",
+      "kind": "report",
+      "description": "Выручка и возвращаемость по каналам привлечения.",
+      "rows_approx": 24
+    },
+    {
+      "fqn": "report.client_360",
+      "name": "Клиент 360",
+      "system": "report",
+      "kind": "report",
+      "description": "Профиль клиента для администратора: история визитов, оценки, LTV.",
+      "rows_approx": 17800
+    }
+  ],
+  "dags": [
+    {
+      "name": "daily_ingest",
+      "description": "Ночная загрузка операционных данных и CSV-выгрузок в staging.",
+      "schedule": "0 2 * * *",
+      "engine": "python",
+      "owner": "data-platform",
+      "steps": 9
+    },
+    {
+      "name": "weekly_marts",
+      "description": "Недельная сборка витрин из staging: визиты, выручка, загрузка, удержание.",
+      "schedule": "0 4 * * 1",
+      "engine": "sql",
+      "owner": "analytics",
+      "steps": 7
+    },
+    {
+      "name": "monthly_reports",
+      "description": "Месячное обновление отчётов и дашбордов из витрин.",
+      "schedule": "0 5 1 * *",
+      "engine": "sql",
+      "owner": "analytics",
+      "steps": 6
+    }
+  ],
+  "edges": [
+    {"from": "table:mongo.spa.clients", "to": "dag:daily_ingest", "mode": "incremental"},
+    {"from": "table:mongo.spa.masters", "to": "dag:daily_ingest", "mode": "full"},
+    {"from": "table:mongo.spa.services", "to": "dag:daily_ingest", "mode": "full"},
+    {"from": "table:mongo.spa.appointments", "to": "dag:daily_ingest", "mode": "incremental"},
+    {"from": "table:mongo.spa.feedback", "to": "dag:daily_ingest", "mode": "incremental"},
+    {"from": "table:csv.price_list", "to": "dag:daily_ingest", "mode": "full"},
+    {"from": "table:csv.room_schedule", "to": "dag:daily_ingest", "mode": "full"},
+
+    {"from": "dag:daily_ingest", "to": "table:stg.clients", "mode": "incremental"},
+    {"from": "dag:daily_ingest", "to": "table:stg.masters", "mode": "full"},
+    {"from": "dag:daily_ingest", "to": "table:stg.services", "mode": "full"},
+    {"from": "dag:daily_ingest", "to": "table:stg.appointments", "mode": "incremental"},
+    {"from": "dag:daily_ingest", "to": "table:stg.feedback", "mode": "incremental"},
+    {"from": "dag:daily_ingest", "to": "table:stg.prices", "mode": "full"},
+    {"from": "dag:daily_ingest", "to": "table:stg.rooms", "mode": "full"},
+
+    {"from": "table:stg.clients", "to": "dag:weekly_marts", "mode": "full"},
+    {"from": "table:stg.masters", "to": "dag:weekly_marts", "mode": "full"},
+    {"from": "table:stg.services", "to": "dag:weekly_marts", "mode": "full"},
+    {"from": "table:stg.appointments", "to": "dag:weekly_marts", "mode": "incremental"},
+    {"from": "table:stg.feedback", "to": "dag:weekly_marts", "mode": "incremental"},
+    {"from": "table:stg.prices", "to": "dag:weekly_marts", "mode": "full"},
+    {"from": "table:stg.rooms", "to": "dag:weekly_marts", "mode": "full"},
+
+    {"from": "dag:weekly_marts", "to": "table:mart.visits_daily", "mode": "full"},
+    {"from": "dag:weekly_marts", "to": "table:mart.revenue_monthly", "mode": "full"},
+    {"from": "dag:weekly_marts", "to": "table:mart.master_load", "mode": "full"},
+    {"from": "dag:weekly_marts", "to": "table:mart.client_retention", "mode": "full"},
+    {"from": "dag:weekly_marts", "to": "table:mart.feedback_score", "mode": "full"},
+
+    {"from": "table:mart.visits_daily", "to": "dag:monthly_reports", "mode": "incremental"},
+    {"from": "table:mart.revenue_monthly", "to": "dag:monthly_reports", "mode": "full"},
+    {"from": "table:mart.master_load", "to": "dag:monthly_reports", "mode": "full"},
+    {"from": "table:mart.client_retention", "to": "dag:monthly_reports", "mode": "full"},
+    {"from": "table:mart.feedback_score", "to": "dag:monthly_reports", "mode": "full"},
+
+    {"from": "dag:monthly_reports", "to": "table:report.revenue_dashboard", "mode": "full"},
+    {"from": "dag:monthly_reports", "to": "table:report.master_performance", "mode": "full"},
+    {"from": "dag:monthly_reports", "to": "table:report.retention_report", "mode": "full"},
+    {"from": "dag:monthly_reports", "to": "table:report.ops_daily", "mode": "full"},
+    {"from": "dag:monthly_reports", "to": "table:report.marketing_summary", "mode": "full"},
+    {"from": "dag:monthly_reports", "to": "table:report.client_360", "mode": "full"}
+  ]
+}
