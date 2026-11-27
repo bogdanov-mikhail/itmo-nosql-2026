@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SPA Data Lineage</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div>
+          <h1>SPA Data Lineage</h1>
+          <p class="subtitle">Каталог таблиц и конвейеров студии</p>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <label class="visually-hidden" for="search">Поиск по каталогу</label>
+        <input
+          id="search"
+          type="search"
+          placeholder="Найти таблицу или DAG"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <ul id="search-results" class="search-results" hidden></ul>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="workspace" aria-label="Граф зависимостей">
+        <div class="toolbar">
+          <div class="segmented" role="group" aria-label="Направление обхода">
+            <button type="button" data-direction="down" class="active">Вниз</button>
+            <button type="button" data-direction="up">Вверх</button>
+            <button type="button" data-direction="both">Оба</button>
+          </div>
+          <label class="depth">
+            Глубина
+            <select id="depth">
+              <option>1</option>
+              <option>2</option>
+              <option selected>3</option>
+              <option>4</option>
+              <option>5</option>
+              <option>6</option>
+              <option>7</option>
+              <option>8</option>
+              <option>9</option>
+              <option>10</option>
+            </select>
+          </label>
+          <button type="button" id="path-mode" class="ghost">Режим пути</button>
+          <button type="button" id="reset-view" class="ghost">Сбросить</button>
+          <span id="status" class="status" role="status"></span>
+        </div>
+
+        <div id="graph" class="graph"></div>
+
+        <div class="legend" aria-label="Легенда">
+          <span class="legend-item"><span class="swatch table"></span>Table</span>
+          <span class="legend-item"><span class="swatch dag"></span>DAG</span>
+          <span class="legend-item"><span class="swatch edge"></span>LOADS (mode)</span>
+          <span class="legend-hint">Двойной клик по узлу раскрывает соседей</span>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <h2>Свойства</h2>
+        <div id="props" class="props empty">
+          Выберите узел на графе или найдите его поиском.
+        </div>
+
+        <div class="path-box">
+          <h3>Путь</h3>
+          <div id="path-from" class="chip">от: —</div>
+          <div id="path-to" class="chip">до: —</div>
+          <p class="hint">
+            Включите режим пути и кликните два узла, чтобы подсветить кратчайшую
+            цепочку LOADS.
+          </p>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">Neo4j · FastAPI · Cytoscape.js</footer>
+
+    <script src="/vendor/cytoscape.min.js"></script>
+    <script src="/vendor/dagre.min.js"></script>
+    <script src="/vendor/cytoscape-dagre.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>
